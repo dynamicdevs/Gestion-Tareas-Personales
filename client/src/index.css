@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Sistema de temas Dynamic Devs
+   Variables semánticas que cambian entre .dark y .light.
+   Acento de marca: cian #06D6E8
+   ============================================================ */
+
+:root.dark {
+  color-scheme: dark;
+  --bg: #0a1520;
+  --bg-glow-1: rgba(6, 214, 232, 0.10);
+  --bg-glow-2: rgba(6, 214, 232, 0.06);
+  --surface: 14 26 38;        /* #0E1A26 (rgb para usar con alpha) */
+  --surface-soft: 23 37 52;   /* #172534 */
+  --border: 148 163 184;      /* slate-400 base, se usa con baja alpha */
+  --text: 226 232 240;        /* slate-200 */
+  --text-dim: 148 163 184;    /* slate-400 */
+  --accent: 6 214 232;        /* #06D6E8 cian marca */
+  --accent-2: 34 211 238;     /* cyan-400 para degradados */
+  --on-accent: 4 18 26;       /* texto sobre el acento (oscuro) */
+}
+
+:root.light {
+  color-scheme: light;
+  --bg: #eef3f7;
+  --bg-glow-1: rgba(6, 214, 232, 0.12);
+  --bg-glow-2: rgba(10, 21, 32, 0.05);
+  --surface: 255 255 255;
+  --surface-soft: 241 245 249;  /* slate-100 */
+  --border: 100 116 139;        /* slate-500 base */
+  --text: 15 26 38;             /* casi el azul oscuro de marca */
+  --text-dim: 71 85 105;        /* slate-600 */
+  --accent: 8 145 178;          /* cyan-700, más legible sobre claro */
+  --accent-2: 6 182 212;        /* cyan-500 */
+  --on-accent: 255 255 255;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(900px circle at 0% 0%, var(--bg-glow-1), transparent 45%),
+    radial-gradient(800px circle at 100% 100%, var(--bg-glow-2), transparent 45%);
+  background-attachment: fixed;
+  color: rgb(var(--text));
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgb(var(--border) / 0.35); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--border) / 0.55); }
+
+@layer components {
+  /* Superficie con efecto vidrio */
+  .glass {
+    background: rgb(var(--surface) / 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgb(var(--border) / 0.18);
+  }
+
+  /* Tarjeta sólida (sobre la superficie soft) */
+  .surface {
+    background: rgb(var(--surface) / 0.97);
+    border: 1px solid rgb(var(--border) / 0.18);
+  }
+
+  .field-input {
+    @apply w-full rounded-xl px-3.5 py-2.5 text-sm transition focus:outline-none;
+    background: rgb(var(--surface-soft) / 0.7);
+    border: 1px solid rgb(var(--border) / 0.25);
+    color: rgb(var(--text));
+  }
+  .field-input::placeholder { color: rgb(var(--text-dim) / 0.7); }
+  .field-input:focus {
+    border-color: rgb(var(--accent) / 0.6);
+    box-shadow: 0 0 0 3px rgb(var(--accent) / 0.18);
+  }
+
+  .btn-primary {
+    @apply font-semibold rounded-xl transition hover:-translate-y-0.5 active:translate-y-0
+           disabled:opacity-50 disabled:hover:translate-y-0;
+    background-image: linear-gradient(to right, rgb(var(--accent)), rgb(var(--accent-2)));
+    color: rgb(var(--on-accent));
+    box-shadow: 0 8px 24px -8px rgb(var(--accent) / 0.5);
+  }
+  .btn-primary:hover { box-shadow: 0 10px 28px -6px rgb(var(--accent) / 0.7); }
+
+  .btn-ghost {
+    @apply font-semibold rounded-xl transition;
+    background: rgb(var(--surface-soft) / 0.8);
+    color: rgb(var(--text));
+  }
+  .btn-ghost:hover { background: rgb(var(--surface-soft)); }
+
+  /* Helpers de color de texto basados en variables */
+  .text-dim { color: rgb(var(--text-dim)); }
+  .text-accent { color: rgb(var(--accent)); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-in { animation: fadeInUp 0.35s ease both; }
+
+/* Pulso para tareas urgentes */
+@keyframes urgentPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35); }
+  50% { box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+}
+.urgent-dot { animation: urgentPulse 1.8s ease-in-out infinite; }
+
+/* En modo claro, sombra suave para despegar superficies del fondo */
+:root.light .surface { box-shadow: 0 1px 3px rgb(15 26 38 / 0.06), 0 4px 12px -4px rgb(15 26 38 / 0.08); }
+:root.light .glass { box-shadow: 0 1px 3px rgb(15 26 38 / 0.05); }

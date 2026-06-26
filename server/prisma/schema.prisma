@@ -1,0 +1,137 @@
+// Esquema de la base de datos (SQLite + Prisma)
+// Modelo central: Task. Relacionado con Subtask (1:N) y Tag (N:M).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Task {
+  id        String   @id @default(cuid())
+  title     String
+  notes     String   @default("")
+
+  // "tarea" | "reunion" | "evento"
+  type      String   @default("tarea")
+  // "Trabajo" | "Personal" | "Estudios"
+  category  String   @default("Trabajo")
+  // "urgente" | "alta" | "media" | "baja"
+  priority  String   @default("media")
+  // "pendiente" | "curso" | "hecha"
+  state     String   @default("pendiente")
+
+  // tarea: fecha límite | reunión: fecha+hora | evento: fecha de inicio
+  due       DateTime?
+  // evento: fecha de fin (rango). null en tarea/reunión.
+  endDate   DateTime?
+  // reunión: "presencial" | "remoto" | null
+  modality  String?
+
+  // Proyecto/curso al que pertenece (opcional)
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectId String?
+
+  subtasks  Subtask[]
+  tags      Tag[]      @relation("TaskTags")
+  // Reunión: rúbrica (instancia) asociada. 1:1 opcional.
+  rubric    MeetingRubric?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([state])
+  @@index([projectId])
+}
+
+// Agrupa tareas. En Trabajo/Personal es un "Proyecto"; en Estudios, un "Curso".
+model Project {
+  id        String  @id @default(cuid())
+  name      String
+  // "Trabajo" | "Personal" | "Estudios"
+  category  String
+  tasks     Task[]
+  rubricTemplates RubricTemplate[]
+  createdAt DateTime @default(now())
+
+  @@index([category])
+}
+
+// ---- Rúbricas de reunión ----
+
+// Plantilla reutilizable (guion/orden del día), opcionalmente ligada a un proyecto.
+model RubricTemplate {
+  id        String  @id @default(cuid())
+  name      String
+  objective String  @default("")
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectId String?
+  items     RubricTemplateItem[]
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+}
+
+model RubricTemplateItem {
+  id         String @id @default(cuid())
+  title      String
+  // "punto" | "acuerdo" | "siguiente_paso"
+  kind       String @default("punto")
+  order      Int    @default(0)
+
+  template   RubricTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  templateId String
+
+  @@index([templateId])
+}
+
+// Instancia de rúbrica copiada dentro de una reunión (Task). Se completa en la reunión.
+model MeetingRubric {
+  id        String @id @default(cuid())
+  name      String @default("")
+  objective String @default("")
+  // Referencia informativa a la plantilla origen (sin FK dura: la copia sobrevive si se borra la plantilla).
+  sourceId  String?
+
+  task      Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String @unique
+
+  items     MeetingRubricItem[]
+}
+
+model MeetingRubricItem {
+  id          String  @id @default(cuid())
+  title       String
+  kind        String  @default("punto")
+  order       Int     @default(0)
+  done        Boolean @default(false)
+  notes       String  @default("")
+  responsible String  @default("")
+
+  rubric      MeetingRubric @relation(fields: [rubricId], references: [id], onDelete: Cascade)
+  rubricId    String
+
+  @@index([rubricId])
+}
+
+model Subtask {
+  id      String  @id @default(cuid())
+  text    String
+  done    Boolean @default(false)
+  order   Int     @default(0)
+
+  task    Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId  String
+
+  @@index([taskId])
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String @unique
+  tasks Task[] @relation("TaskTags")
+}
