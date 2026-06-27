@@ -1,6 +1,6 @@
 import ollama from "ollama";
 import { aiExtractionSchema, aiResponseFormat, type AiExtraction } from "./aiSchema.js";
-import { CATEGORIES, PRIORITIES, TYPES, MODALITIES, RUBRIC_KINDS } from "../validation.js";
+import { CATEGORIES, PRIORITIES, TYPES, STATES, MODALITIES, RUBRIC_KINDS } from "../validation.js";
 
 // Extrae el primer objeto JSON de un texto (quita ```json fences y prosa alrededor).
 function extractJson(raw: string): string {
@@ -23,10 +23,18 @@ function normalize(obj: any): any {
   if (!obj || typeof obj !== "object") return obj;
 
   // intent: el modelo inventa valores ("update", "cancelar_todo", "edit"...).
-  // Los mapeamos a nuestro enum: create_task | chat | cancel | confirm.
+  // Los mapeamos a nuestro enum: create_task | chat | cancel | confirm | query | create_project.
   const rawIntent = str(obj.intent).toLowerCase();
+  const hasProject = obj.project && typeof obj.project === "object";
+  const hasRubric = obj.rubric && typeof obj.rubric === "object";
   if (/cancel|descart|borr|olvid|anul/.test(rawIntent)) {
     obj.intent = "cancel";
+  } else if (/create_rubric|crear?_?rubric|new_?rubric|plantilla/.test(rawIntent) || (hasRubric && !obj.task)) {
+    obj.intent = "create_rubric";
+  } else if (/create_project|crear?_?proyect|crear?_?curso|new_?project/.test(rawIntent) || (hasProject && !obj.task)) {
+    obj.intent = "create_project";
+  } else if (/query|consult|resum|list|buscar|search|summar/.test(rawIntent)) {
+    obj.intent = "query";
   } else if (/confirm|guard|cre[ae]r?l|s[ií]\b|dale/.test(rawIntent)) {
     obj.intent = "confirm";
   } else if (obj.task && typeof obj.task === "object") {
@@ -40,6 +48,72 @@ function normalize(obj: any): any {
 
   obj.reply = str(obj.reply);
   if (obj.task === undefined) obj.task = null;
+  if (obj.query === undefined) obj.query = null;
+  if (obj.project === undefined) obj.project = null;
+  if (obj.rubric === undefined) obj.rubric = null;
+
+  // Normalizar project (create_project).
+  if (obj.project && typeof obj.project === "object") {
+    const p = obj.project;
+    p.name = str(p.name) || str(p.nombre);
+    if (typeof p.category === "string") {
+      const found = (CATEGORIES as readonly string[]).find(
+        (c) => c.toLowerCase() === p.category.toLowerCase()
+      );
+      p.category = found ?? "Trabajo";
+    } else {
+      p.category = "Trabajo";
+    }
+  }
+
+  // Normalizar rubric (create_rubric): plantilla independiente.
+  if (obj.rubric && typeof obj.rubric === "object") {
+    const r = obj.rubric;
+    r.name = str(r.name) || str(r.nombre) || str(r.title);
+    r.objective = str(r.objective) || str(r.objetivo);
+    r.projectPhrase = str(r.projectPhrase) || str(r.project) || str(r.proyecto);
+    const kindMap: Record<string, string> = {
+      acuerdo: "acuerdo", agreement: "acuerdo",
+      siguiente_paso: "siguiente_paso", proximo_paso: "siguiente_paso", next_step: "siguiente_paso", accion: "siguiente_paso",
+      punto: "punto", topic: "punto", tema: "punto",
+    };
+    if (!Array.isArray(r.items)) r.items = [];
+    r.items = r.items
+      .map((it: any) => {
+        const title = typeof it === "string" ? it : str(it?.title) || str(it?.text) || str(it?.name);
+        const rawKind = (typeof it === "object" ? str(it?.kind) || str(it?.type) : "").toLowerCase();
+        const kind = (RUBRIC_KINDS as readonly string[]).includes(rawKind) ? rawKind : kindMap[rawKind] ?? "punto";
+        return { title, kind };
+      })
+      .filter((it: any) => it.title.trim());
+  }
+
+  // Normalizar query (filtros de consulta): vacíos/sinónimos → "".
+  if (obj.query && typeof obj.query === "object") {
+    const q = obj.query;
+    const cat = (CATEGORIES as readonly string[]).find((c) => c.toLowerCase() === str(q.category).toLowerCase());
+    q.category = cat ?? "";
+    const pr = (PRIORITIES as readonly string[]).find((p) => p.toLowerCase() === str(q.priority).toLowerCase());
+    q.priority = pr ?? "";
+    const tyMap: Record<string, string> = { task: "tarea", meeting: "reunion", event: "evento" };
+    const tyRaw = str(q.type).toLowerCase();
+    q.type = (TYPES as readonly string[]).includes(tyRaw) ? tyRaw : tyMap[tyRaw] ?? "";
+    const stMap: Record<string, string> = { pendiente: "pendiente", curso: "curso", "en_curso": "curso", hecha: "hecha", done: "hecha" };
+    const stRaw = str(q.state).toLowerCase();
+    q.state = (STATES as readonly string[]).includes(stRaw) ? stRaw : stMap[stRaw] ?? "";
+    const tfRaw = str(q.timeframe).toLowerCase().replace(/[\s-]+/g, "_");
+    const tfMap: Record<string, string> = {
+      hoy: "hoy", today: "hoy",
+      semana: "semana", esta_semana: "semana", this_week: "semana", week: "semana",
+      semana_proxima: "semana_proxima", proxima_semana: "semana_proxima",
+      siguiente_semana: "semana_proxima", semana_que_viene: "semana_proxima", next_week: "semana_proxima",
+      mes: "mes", este_mes: "mes", this_month: "mes", month: "mes",
+      vencidas: "vencidas", vencido: "vencidas", atrasadas: "vencidas", overdue: "vencidas",
+    };
+    q.timeframe = tfMap[tfRaw] ?? "";
+    q.dateFrom = str(q.dateFrom) || str(q.date_from) || str(q.from) || str(q.desde);
+    q.dateTo = str(q.dateTo) || str(q.date_to) || str(q.to) || str(q.hasta);
+  }
 
   const t = obj.task;
   if (t && typeof t === "object") {

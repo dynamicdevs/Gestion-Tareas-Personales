@@ -3,12 +3,13 @@ import { CATEGORIES, CATEGORY_META, type Task, type Category } from "../types";
 interface Props {
   tasks: Task[];
   activeCategory: string;
-  section: "tasks" | "rubrics";
+  section: "tasks" | "rubrics" | "faq";
   onCategory: (c: Category) => void;
   onRubrics: () => void;
+  onFaq: () => void;
 }
 
-export default function Sidebar({ tasks, activeCategory, section, onCategory, onRubrics }: Props) {
+export default function Sidebar({ tasks, activeCategory, section, onCategory, onRubrics, onFaq }: Props) {
   const itemCls = (active: boolean) =>
     `flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer text-sm transition-all ${
       active
@@ -38,6 +39,9 @@ export default function Sidebar({ tasks, activeCategory, section, onCategory, on
       <div className="space-y-1">
         <div className={itemCls(section === "rubrics")} onClick={onRubrics}>
           <span>📋 Rúbricas</span>
+        </div>
+        <div className={itemCls(section === "faq")} onClick={onFaq}>
+          <span>❓ FAQ / Ayuda</span>
         </div>
       </div>
     </nav>

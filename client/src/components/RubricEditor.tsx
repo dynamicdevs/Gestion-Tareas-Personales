@@ -113,14 +113,16 @@ export default function RubricEditor({
 
   return (
     <div>
-      {/* Objetivo */}
-      <label className="block text-xs text-fg-dim mb-1">🎯 Objetivo de la reunión</label>
+      {/* Objetivo / descripción */}
+      <label className="block text-xs text-fg-dim mb-1">
+        {isInstance ? "🎯 Objetivo de la reunión" : "🎯 Descripción / objetivo de la rúbrica"}
+      </label>
       <textarea
         className={inputCls + " mb-4 resize-y"}
         rows={2}
         value={objective}
         onChange={(e) => onObjectiveChange(e.target.value)}
-        placeholder="¿Qué se quiere lograr en esta reunión?"
+        placeholder={isInstance ? "¿Qué se quiere lograr en esta reunión?" : "¿De qué trata esta rúbrica y cuándo usarla?"}
       />
 
       <div className="flex items-center justify-between mb-2">

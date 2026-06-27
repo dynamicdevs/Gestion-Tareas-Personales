@@ -2,6 +2,7 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { RUBRIC_KINDS } from "../validation.js";
 import { chatJson, chatFreeform, type ChatMsg } from "./ollamaClient.js";
+// parsePointsFromText reusa chatJson; no requiere imports adicionales.
 
 // --- Sugerir orden del día ---
 
@@ -50,6 +51,53 @@ export async function suggestRubricItems(title: string, objective: string): Prom
   });
   if (!parsed.success) return [];
   return parsed.data.items.filter((i) => i.title.trim()).slice(0, 6);
+}
+
+// --- Parsear puntos dictados por el usuario (para el asistente secuencial) ---
+
+const parseSchema = z.object({
+  items: z.array(z.object({ title: z.string() })),
+});
+const parseFormat = zodToJsonSchema(parseSchema, { $refStrategy: "none" });
+
+// Convierte texto libre del usuario en una lista de títulos de puntos. Útil cuando
+// dicta varios en un mensaje ("revisar avances, ver bloqueos y definir prioridades").
+// `kind` se asigna fuera según el paso del flujo (punto/acuerdo/siguiente_paso).
+export async function parsePointsFromText(text: string): Promise<string[]> {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+
+  // Atajo determinista: si el usuario ya separó por comas / "y" / saltos de línea,
+  // partimos sin molestar al modelo (más rápido y fiable).
+  const quick = trimmed
+    .split(/\n|,|;| y | e |·|•|\d+[).]\s/i)
+    .map((s) => s.trim())
+    .filter((s) => s.length >= 2);
+  if (quick.length >= 2) return quick.slice(0, 12);
+
+  const messages: ChatMsg[] = [
+    {
+      role: "system",
+      content: [
+        "Extraes los puntos individuales de un texto para una rúbrica de reunión.",
+        'Devuelve SOLO un JSON: { "items": [{ "title": "..." }] }.',
+        "Cada title es un punto breve y accionable, en español. No inventes puntos que no estén en el texto.",
+        "Si el texto es un único punto, devuelve un solo item.",
+      ].join("\n"),
+    },
+    { role: "user", content: trimmed },
+  ];
+  try {
+    const raw = await chatJson(messages, parseFormat);
+    const items = Array.isArray(raw?.items) ? raw.items : [];
+    return items
+      .map((it: any) => (typeof it === "string" ? it : String(it?.title ?? "")).trim())
+      .filter((s: string) => s.length >= 2)
+      .slice(0, 12);
+  } catch {
+    // Si la IA falla, usamos el texto completo como un único punto.
+    return [trimmed];
+  }
 }
 
 // --- Generar acta ---

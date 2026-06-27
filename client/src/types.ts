@@ -167,4 +167,43 @@ export type AiChatResponse =
   | { kind: "draft"; text: string; draft: TaskInput }
   | { kind: "cancel"; text: string }
   | { kind: "confirm"; text: string }
+  | { kind: "project_created"; text: string; project: { id: string; name: string; category: Category } }
+  | { kind: "rubric_created"; text: string; rubric: { id: string; name: string } }
+  | { kind: "rubric_flow"; text: string; flow: RubricFlowState }
   | { kind: "error"; text: string };
+
+// ---- Asistente secuencial de rúbricas ----
+
+export type RubricFlowStep =
+  | "name"
+  | "project"
+  | "objective"
+  | "points"
+  | "agreements"
+  | "nextSteps"
+  | "confirm";
+
+export interface RubricFlowDraft {
+  name: string;
+  objective: string;
+  projectId: string | null;
+  projectName: string | null;
+  pendingProjectName: string | null;
+  items: { title: string; kind: RubricKind }[];
+}
+
+export interface RubricFlowState {
+  step: RubricFlowStep;
+  draft: RubricFlowDraft;
+}
+
+// Respuesta del endpoint /api/ai/rubric-flow.
+export interface RubricFlowResponse {
+  step: RubricFlowStep;
+  draft: RubricFlowDraft;
+  reply: string;
+  done?: boolean;
+  cancelled?: boolean;
+  createdId?: string;
+  offerCreateProject?: string;
+}

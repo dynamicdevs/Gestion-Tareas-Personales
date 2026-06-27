@@ -6,16 +6,22 @@ import {
   RUBRIC_KIND_META,
   type ChatMessage,
   type TaskInput,
+  type Task,
   type Project,
+  type RubricTemplate,
+  type RubricFlowState,
 } from "../types";
 import { fmtDate } from "../utils";
 
 interface Props {
   open: boolean;
   projects: Project[];
+  tasks: Task[];
+  rubrics: RubricTemplate[];
   onClose: () => void;
   onCreate: (draft: TaskInput) => Promise<void>;
   onEdit: (draft: TaskInput) => void;
+  onProjectCreated: () => void;
 }
 
 const PRIO_LABEL: Record<string, string> = { urgente: "🔥 Urgente", alta: "Alta", media: "Media", baja: "Baja" };
@@ -85,18 +91,52 @@ function DraftCard({
 }
 
 const SUGGESTIONS = [
-  "Recordame llamar al cliente mañana, urgente",
-  "Entregar el informe el viernes",
-  "Estudiar para el examen la semana que viene",
+  "Recordar llamar al cliente mañana, urgente",
+  "¿Qué tengo esta semana?",
+  "Crear una rúbrica",
+  "Crear un proyecto llamado Foundry",
 ];
 
-export default function ChatPanel({ open, projects, onClose, onCreate, onEdit }: Props) {
+export default function ChatPanel({ open, projects, tasks, rubrics, onClose, onCreate, onEdit, onProjectCreated }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   // Ids (índice) de mensajes cuyo borrador ya fue creado.
   const [createdIdx, setCreatedIdx] = useState<Set<number>>(new Set());
+  // Estado del asistente secuencial de rúbricas (null = no hay flujo activo).
+  const [rubricFlow, setRubricFlow] = useState<RubricFlowState | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const projList = projects.map((p) => ({ id: p.id, name: p.name, category: p.category }));
+
+  // Avanza un paso del asistente secuencial de rúbricas y muestra la pregunta siguiente.
+  async function runFlow(state: RubricFlowState, message: string) {
+    setLoading(true);
+    try {
+      const res = await api.aiRubricFlow({
+        step: state.step,
+        draft: state.draft,
+        message,
+        projects: projList,
+      });
+      setMessages((prev) => [...prev, { role: "assistant", content: res.reply }]);
+      if (res.done) {
+        setRubricFlow(null);
+        onProjectCreated(); // refresca la lista de rúbricas
+      } else if (res.cancelled) {
+        setRubricFlow(null);
+      } else {
+        setRubricFlow({ step: res.step, draft: res.draft });
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Ups, hubo un problema con el asistente de rúbricas." },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -108,6 +148,13 @@ export default function ChatPanel({ open, projects, onClose, onCreate, onEdit }:
     setInput("");
     const history = [...messages, { role: "user" as const, content }];
     setMessages(history);
+
+    // Si hay un asistente de rúbrica en curso, este mensaje es su respuesta.
+    if (rubricFlow) {
+      await runFlow(rubricFlow, content);
+      return;
+    }
+
     setLoading(true);
 
     // Último borrador propuesto que aún NO fue confirmado ni descartado: se manda
@@ -128,7 +175,17 @@ export default function ChatPanel({ open, projects, onClose, onCreate, onEdit }:
       const res = await api.aiChat(
         history.map((m) => ({ role: m.role, content: m.content })),
         pendingDraft,
-        projects.map((p) => ({ id: p.id, name: p.name, category: p.category }))
+        projects.map((p) => ({ id: p.id, name: p.name, category: p.category })),
+        tasks.map((t) => ({
+          title: t.title,
+          type: t.type,
+          category: t.category,
+          priority: t.priority,
+          state: t.state,
+          due: t.due,
+          projectId: t.projectId,
+        })),
+        rubrics.map((r) => ({ name: r.name, itemCount: r.itemCount }))
       );
       if (res.kind === "draft") {
         setMessages((prev) => [...prev, { role: "assistant", content: res.text, draft: res.draft }]);
@@ -148,6 +205,17 @@ export default function ChatPanel({ open, projects, onClose, onCreate, onEdit }:
         // Descartar el borrador pendiente (marcándolo como "ya resuelto").
         if (pendingIdx >= 0) setCreatedIdx((prev) => new Set(prev).add(pendingIdx));
         setMessages((prev) => [...prev, { role: "assistant", content: res.text }]);
+      } else if (res.kind === "project_created" || res.kind === "rubric_created") {
+        // El asistente creó un proyecto/curso o una plantilla de rúbrica: refrescamos.
+        onProjectCreated();
+        setMessages((prev) => [...prev, { role: "assistant", content: res.text }]);
+      } else if (res.kind === "rubric_flow") {
+        // Arranca el asistente SECUENCIAL de rúbricas: mostramos el intro y pedimos
+        // el primer paso (con message vacío el backend devuelve la pregunta inicial).
+        setMessages((prev) => [...prev, { role: "assistant", content: res.text }]);
+        setLoading(false);
+        await runFlow(res.flow, "");
+        return;
       } else {
         setMessages((prev) => [...prev, { role: "assistant", content: res.text }]);
       }
@@ -170,6 +238,7 @@ export default function ChatPanel({ open, projects, onClose, onCreate, onEdit }:
   function reset() {
     setMessages([]);
     setCreatedIdx(new Set());
+    setRubricFlow(null);
     setInput("");
     setLoading(false);
   }
@@ -222,9 +291,9 @@ export default function ChatPanel({ open, projects, onClose, onCreate, onEdit }:
             <div className="text-center text-fg-dim py-8">
               <div className="text-4xl mb-2">💬</div>
               <p className="text-sm mb-4">
-                Decime qué querés anotar y te armo la tarea.
+                Dime qué quieres anotar y te armo la tarea.
                 <br />
-                Probá con:
+                Prueba con:
               </p>
               <div className="flex flex-col gap-2">
                 {SUGGESTIONS.map((s) => (
@@ -244,7 +313,7 @@ export default function ChatPanel({ open, projects, onClose, onCreate, onEdit }:
             <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
               <div className={m.role === "user" ? "max-w-[85%]" : "max-w-[90%]"}>
                 <div
-                  className={`rounded-2xl px-3.5 py-2 text-sm ${
+                  className={`rounded-2xl px-3.5 py-2 text-sm whitespace-pre-line ${
                     m.role === "user"
                       ? "bg-accent text-on-accent rounded-br-sm"
                       : "bg-surface-soft text-fg rounded-bl-sm"
@@ -273,11 +342,29 @@ export default function ChatPanel({ open, projects, onClose, onCreate, onEdit }:
           )}
         </div>
 
+        {/* Indicador de flujo activo */}
+        {rubricFlow && (
+          <div className="px-3 pt-2 flex items-center justify-between">
+            <span className="text-[11px] text-accent flex items-center gap-1">
+              📋 Armando rúbrica{rubricFlow.draft.name ? `: ${rubricFlow.draft.name}` : ""}
+            </span>
+            <button
+              className="text-[11px] text-fg-dim hover:text-red-400"
+              onClick={() => {
+                setRubricFlow(null);
+                setMessages((prev) => [...prev, { role: "assistant", content: "Cancelé la creación de la rúbrica." }]);
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
+
         {/* Input */}
         <div className="p-3 border-t border-line/30 flex gap-2">
           <input
             className="field-input flex-1"
-            placeholder="Escribe un mensaje…"
+            placeholder={rubricFlow ? "Tu respuesta…" : "Escribe un mensaje…"}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send(input)}

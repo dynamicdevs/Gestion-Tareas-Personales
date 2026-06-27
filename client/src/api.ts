@@ -94,18 +94,47 @@ export const api = {
   aiChat: (
     messages: { role: "user" | "assistant"; content: string }[],
     currentDraft?: TaskInput | null,
-    projects?: { id: string; name: string; category: string }[]
+    projects?: { id: string; name: string; category: string }[],
+    tasks?: {
+      title: string;
+      type: string;
+      category: string;
+      priority: string;
+      state: string;
+      due: string | null;
+      projectId: string | null;
+    }[],
+    rubrics?: { name: string; itemCount: number }[]
   ) =>
     fetch("/api/ai/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages, currentDraft: currentDraft ?? null, projects: projects ?? [] }),
+      body: JSON.stringify({
+        messages,
+        currentDraft: currentDraft ?? null,
+        projects: projects ?? [],
+        tasks: tasks ?? [],
+        rubrics: rubrics ?? [],
+      }),
     }).then(async (r) => {
       // El endpoint devuelve siempre JSON (incluso en errores controlados).
       const data = (await r.json().catch(() => null)) as AiChatResponse | null;
       if (data) return data;
       return { kind: "error", text: "No se pudo contactar con el asistente." } as AiChatResponse;
     }),
+
+  // Asistente secuencial de rúbricas: envía el estado actual + el mensaje del usuario.
+  aiRubricFlow: (payload: {
+    step: string;
+    draft: unknown;
+    message: string;
+    projects: { id: string; name: string; category: string }[];
+  }) =>
+    fetch("/api/ai/rubric-flow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then((r) => handle<import("./types").RubricFlowResponse>(r)),
 
   // Sugiere puntos de rúbrica para una reunión.
   aiSuggestRubric: (title: string, objective: string) =>

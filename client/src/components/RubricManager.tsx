@@ -69,8 +69,8 @@ export default function RubricManager({ projects, onChanged }: Props) {
 
   async function remove(id: string) {
     const ok = await confirm({
-      title: "Eliminar plantilla",
-      message: "¿Eliminar esta plantilla de rúbrica? Las reuniones que ya la usaron conservan su copia.",
+      title: "Eliminar rúbrica",
+      message: "¿Eliminar esta rúbrica? Las reuniones que ya la usaron conservan su copia.",
       confirmText: "Eliminar",
       danger: true,
     });
@@ -87,15 +87,15 @@ export default function RubricManager({ projects, onChanged }: Props) {
     return (
       <div className="max-w-2xl">
         <button className="text-sm text-fg-dim hover:text-fg mb-4" onClick={() => setEditor(null)}>
-          ‹ Volver a las plantillas
+          ‹ Volver a las rúbricas
         </button>
         <div className="glass rounded-2xl p-5">
           <h2 className="text-lg font-bold text-fg mb-4 flex items-center gap-2">
             <span className="text-accent">📋</span>
-            {editor.id ? "Editar plantilla" : "Nueva plantilla de rúbrica"}
+            {editor.id ? "Editar rúbrica" : "Nueva rúbrica"}
           </h2>
 
-          <label className="block text-xs text-fg-dim mb-1">Nombre de la plantilla *</label>
+          <label className="block text-xs text-fg-dim mb-1">Nombre de la rúbrica *</label>
           <input
             className="field-input mb-4"
             value={editor.name}
@@ -130,7 +130,7 @@ export default function RubricManager({ projects, onChanged }: Props) {
               Cancelar
             </button>
             <button className="btn-primary px-5 py-2 text-sm" disabled={!editor.name.trim()} onClick={save}>
-              Guardar plantilla
+              Guardar rúbrica
             </button>
           </div>
         </div>
@@ -143,11 +143,11 @@ export default function RubricManager({ projects, onChanged }: Props) {
     <div>
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h2 className="text-xl font-bold text-fg">Plantillas de rúbrica</h2>
-          <p className="text-sm text-fg-dim">Guiones reutilizables para tus reuniones.</p>
+          <h2 className="text-xl font-bold text-fg">Rúbricas</h2>
+          <p className="text-sm text-fg-dim">Guiones reutilizables para preparar y conducir tus reuniones.</p>
         </div>
         <button className="btn-primary px-4 py-2 text-sm" onClick={() => setEditor({ ...empty, items: [] })}>
-          + Nueva plantilla
+          + Nueva rúbrica
         </button>
       </div>
 
@@ -156,9 +156,9 @@ export default function RubricManager({ projects, onChanged }: Props) {
       ) : list.length === 0 ? (
         <div className="text-center text-fg-dim py-16">
           <div className="text-5xl mb-3">📋</div>
-          Aún no tienes plantillas de rúbrica.
+          Aún no tienes rúbricas.
           <br />
-          Crea una con "+ Nueva plantilla".
+          Crea una con "+ Nueva rúbrica".
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

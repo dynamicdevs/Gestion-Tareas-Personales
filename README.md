@@ -6,7 +6,8 @@ tres apartados (**Trabajo**, **Proyectos personales** y **Estudios**).
 La aplicación funciona **en local**, en el propio equipo: no necesita internet ni servicios externos, y los datos
 se guardan en una base de datos en la máquina del usuario. Está pensada como herramienta de productividad
 personal, con tres formas de visualizar el trabajo (tablero, lista y calendario), recordatorios para las
-reuniones y plantillas reutilizables para preparar el orden del día.
+reuniones, rúbricas reutilizables para preparar el orden del día y un **asistente de IA** que crea y consulta
+ítems en lenguaje natural.
 
 > **¿Para quién es este documento?** Para cualquier persona que vaya a instalar, ejecutar o continuar el
 > desarrollo de la aplicación. No hace falta conocer el código para ponerla en marcha: basta con seguir la
@@ -17,11 +18,13 @@ reuniones y plantillas reutilizables para preparar el orden del día.
 Al abrir la aplicación se muestra, de izquierda a derecha:
 
 1. **Barra lateral** — los apartados (Trabajo / Personal / Estudios) con el número de ítems en cada uno, y la
-   sección **Rúbricas** para gestionar plantillas de reunión.
+   sección **Herramientas** con **📋 Rúbricas** (guiones reutilizables para reuniones) y **❓ FAQ / Ayuda**
+   (preguntas frecuentes que explican toda la aplicación).
 2. **Cabecera** — el logo de Dynamic Devs, el botón ☀️/🌙 para cambiar entre tema claro y oscuro, y el botón
    **+ Nueva tarea**.
 3. **Zona principal** — tarjetas de resumen (totales, completadas, próximas a vencer, vencidas), un selector de
    vista (**Tablero / Lista / Calendario**), buscador, filtros, y el contenido según la vista elegida.
+4. **Botón flotante 🤖** (abajo a la derecha) — abre el **asistente de IA** en un panel lateral.
 
 ---
 
@@ -61,10 +64,14 @@ Al abrir la aplicación se muestra, de izquierda a derecha:
 ### Reuniones avanzadas
 - **Recordatorios automáticos**: aviso emergente (toast) + **campanita** a los **30, 15 y 5 minutos** antes
   de cada reunión (mientras la app esté abierta).
-- **Rúbricas de reunión**: plantillas reutilizables (guion / orden del día) gestionadas en la sección
-  **📋 Rúbricas** de la barra lateral. Se asocian a un proyecto y, al crear una reunión, se elige una plantilla
-  y se **copia** a esa reunión. Cada punto tiene tipo (• punto / ✅ acuerdo / ➡️ próximo paso), se marca como
-  tratado, lleva **notas** y **responsable**, y se reordena. Editar la copia no altera la plantilla.
+- **Rúbricas**: guiones reutilizables (orden del día) gestionados en la sección **📋 Rúbricas** de la barra
+  lateral. Cada rúbrica es **independiente** y se puede **asociar a un proyecto**; tiene un nombre, una
+  descripción/objetivo y una lista de puntos clasificados (• punto a tratar / ✅ acuerdo / ➡️ próximo paso).
+  Al crear una reunión se elige una rúbrica con **"Usar plantilla…"** y se **copia** a esa reunión, donde cada
+  punto se marca como tratado, lleva **notas** y **responsable**, y se reordena. Editar la copia no altera la
+  rúbrica original. También se pueden crear rúbricas desde el **asistente de IA** (ver abajo).
+- **Acta de reunión**: distinta de la rúbrica. La rúbrica se prepara de antemano (vive en la sección Rúbricas);
+  el **acta** es el resumen de lo hablado y se genera *dentro* de una reunión concreta, enlazada a ella.
 
 ### 🤖 Asistente de IA (chatbot)
 Un botón flotante 🤖 abre un **chat** donde se le habla en lenguaje natural y el asistente crea los ítems por el
@@ -75,11 +82,20 @@ usuario. Funciona con **Ollama** (modelo `minimax-m3:cloud`); la llamada se ejec
 - **Proponer y confirmar**: nunca crea nada sin aprobación. Muestra un **borrador** que se puede
   **confirmar**, **editar** (abre el formulario precargado) o **descartar**. También entiende instrucciones como
   *"que sea prioridad alta"*, *"asignarla al proyecto Foundry"* o *"confírmala"*.
-- **Genera rúbricas de reunión**: si se menciona una minuta u orden del día
-  (*"con minuta para revisar pendientes, ver bloqueos y acordar la entrega"*), crea la rúbrica con los puntos
-  ya **clasificados** en punto a tratar / acuerdo / próximo paso.
+- **Consulta y resume tus ítems**: pregúntale *"¿qué tengo esta semana?"*, *"pendientes urgentes de Trabajo"*,
+  *"¿qué reuniones tengo hoy?"*, *"¿qué tengo la semana que viene?"* o *"¿qué hay vencido?"* y responde con la
+  lista real de la app. Los filtros (apartado, prioridad, tipo, estado, hoy/semana/semana próxima/mes/vencidas
+  y rangos de fechas concretas) y el conteo se calculan en el servidor a partir de tus datos, así que las cifras
+  son **siempre fieles** y nunca inventa ítems.
+- **Crea proyectos y cursos por lenguaje natural**: *"crea un proyecto llamado Foundry"* o *"nuevo curso de
+  inglés en Estudios"*. Detecta el apartado (los *cursos* van a Estudios) y evita duplicados.
+- **Asistente secuencial de rúbricas**: al pedir *"crea una rúbrica"*, te guía **paso a paso** preguntando
+  nombre → proyecto (si no existe, ofrece **crearlo**) → descripción/objetivo → puntos a tratar → acuerdos →
+  próximos pasos → confirmación. En cualquier momento puedes decir *"editar nombre"* (o el campo que sea) para
+  volver a ese paso, o *"cancelar"*. Si ya diste algún dato al inicio, se saltan esos pasos. Antes de crearla
+  muestra un **resumen** para confirmar.
 - **Robusto**: las fechas relativas se resuelven en el servidor; si no entiende algo, **conversa** y pregunta o
-  explica qué puede hacer, en lugar de fallar.
+  explica qué puede hacer, en lugar de fallar. Responde siempre en español neutro.
 
 Además, dentro de la rúbrica de una reunión hay dos asistentes de IA:
 - **✨ Sugerir con IA**: genera un orden del día (3-6 puntos clasificados) a partir del título y el objetivo de la
@@ -93,6 +109,8 @@ Además, dentro de la rúbrica de una reunión hay dos asistentes de IA:
 ### Interfaz
 - **Tema claro / oscuro** con interruptor (recuerda tu preferencia), con los colores de marca de Dynamic Devs.
 - Diálogos de confirmación y formularios propios (sin los popups nativos del navegador).
+- **❓ FAQ / Ayuda**: sección en la barra lateral (debajo de Rúbricas) con preguntas frecuentes plegables que
+  explican todo el software, incluida la diferencia entre rúbrica y acta y **cómo instalar Ollama**.
 
 ---
 
@@ -102,13 +120,16 @@ Además, dentro de la rúbrica de una reunión hay dos asistentes de IA:
 GestionTareasSystem/
 ├── client/                 # Frontend React + Vite
 │   └── src/
-│       ├── components/     # Board, Calendar, TaskModal, RubricEditor, etc.
+│       ├── components/     # Board, Calendar, TaskModal, RubricManager,
+│       │                   #   RubricEditor, ChatPanel, Faq, Sidebar, etc.
 │       ├── api.ts          # Cliente de la API REST
 │       ├── types.ts        # Tipos e info de presentación
 │       └── App.tsx         # Componente raíz
 ├── server/                 # Backend Express + Prisma
 │   ├── src/
-│   │   ├── routes/         # tasks, projects, rubrics
+│   │   ├── routes/         # tasks, projects, rubrics, ai
+│   │   ├── ai/             # Integración con Ollama:
+│   │   │                   #   ollamaClient, aiSchema, dateResolver, rubricAi
 │   │   ├── validation.ts   # Esquemas Zod
 │   │   └── index.ts        # Servidor Express
 │   └── prisma/
@@ -144,6 +165,25 @@ En desarrollo el frontend hace proxy de `/api` al backend, así que no hay probl
 
 ---
 
+## 🤖 Configurar el asistente de IA (Ollama)
+
+El asistente de IA es **opcional**: el resto de la aplicación funciona sin él. Si quieres usar el chatbot 🤖,
+necesitas **Ollama** corriendo en tu equipo:
+
+1. Descarga e instala Ollama desde **https://ollama.com/download** (Windows, macOS o Linux).
+2. Abre la app de Ollama; queda corriendo en segundo plano en `http://localhost:11434`.
+3. Descarga el modelo que usa el asistente:
+   ```bash
+   ollama pull minimax-m3:cloud
+   ```
+4. Abre el chat 🤖 en la aplicación y pruébalo. Si Ollama está activo, ya responde.
+
+> ¿Cómo saber si está corriendo? Abre `http://localhost:11434` en el navegador: si ves *"Ollama is running"*,
+> está activo. Si el chat muestra un error de conexión, abre la app de Ollama y reinténtalo. El modelo se
+> configura en `server/src/ai/ollamaClient.ts` (constante `MODEL`).
+
+---
+
 ## 📖 Guía de uso paso a paso
 
 **Crear una tarea.** Pulsar **+ Nueva tarea** (arriba a la derecha). Seleccionar el tipo (📋 Tarea), escribir el
@@ -164,17 +204,25 @@ Pendiente / En curso / Hecha para cambiar su estado. El botón ＋ de cada colum
 agenda por bloques de 30 minutos. Arrastrar una reunión para moverla de hora, o estirar su borde inferior para
 alargarla.
 
-**Preparar rúbricas de reunión.** En la barra lateral, entrar en **📋 Rúbricas** y crear una **plantilla** (un
-guion con puntos, acuerdos y próximos pasos), opcionalmente asociada a un proyecto. Luego, al crear una reunión,
-seleccionar esa plantilla con **"Usar plantilla…"**: su contenido se copia a la reunión, donde durante la misma
-se marca cada punto como tratado, se añaden notas y se asignan responsables. Editar la copia no modifica la
-plantilla original.
+**Preparar rúbricas.** En la barra lateral, entrar en **📋 Rúbricas** y crear una (un guion con puntos,
+acuerdos y próximos pasos), con nombre, descripción/objetivo y, opcionalmente, un proyecto asociado. Luego, al
+crear una reunión, seleccionar esa rúbrica con **"Usar plantilla…"**: su contenido se copia a la reunión, donde
+durante la misma se marca cada punto como tratado, se añaden notas y se asignan responsables. Editar la copia no
+modifica la rúbrica original. También se puede crear una rúbrica desde el asistente de IA (ver abajo).
+
+**Usar el asistente de IA.** Pulsar el botón flotante **🤖** (abajo a la derecha). En lenguaje natural se puede:
+crear tareas/reuniones/eventos (*"reunión con el equipo el lunes a las 10, remota"*), consultar lo anotado
+(*"¿qué tengo esta semana?"*), crear proyectos (*"crea un proyecto llamado Foundry"*) o crear una rúbrica paso a
+paso (*"crea una rúbrica"*). Requiere Ollama (ver [Configurar el asistente de IA](#-configurar-el-asistente-de-ia-ollama)).
 
 **Recibir recordatorios.** Con la aplicación abierta, se muestra un aviso emergente con sonido a los 30, 15 y 5
 minutos antes de cada reunión.
 
 **Organizar por proyectos/cursos.** Dentro de un apartado, crear proyectos (en Estudios se llaman *cursos*) y
 asignarlos a los ítems. El selector superior permite filtrar por proyecto.
+
+**Resolver dudas.** En la barra lateral, **❓ FAQ / Ayuda** reúne preguntas frecuentes que explican toda la
+aplicación.
 
 **Cambiar el tema.** Pulsar ☀️/🌙 en la cabecera para alternar entre claro y oscuro; la elección se recuerda.
 
@@ -204,8 +252,9 @@ Base: `http://localhost:4000/api`
 | `PATCH` | `/tasks/:id` | Actualización parcial (estado, fechas…) |
 | `DELETE` | `/tasks/:id` | Elimina una tarea |
 | `GET/POST/PATCH/DELETE` | `/projects` | CRUD de proyectos/cursos |
-| `GET/POST/PUT/DELETE` | `/rubrics` | CRUD de plantillas de rúbrica |
-| `POST` | `/ai/chat` | Asistente de IA: interpreta el mensaje y propone un borrador de ítem |
+| `GET/POST/PUT/DELETE` | `/rubrics` | CRUD de rúbricas (filtro opcional: `projectId`) |
+| `POST` | `/ai/chat` | Asistente de IA: propone un borrador de ítem, responde consultas/resúmenes, crea proyectos o inicia el asistente de rúbricas |
+| `POST` | `/ai/rubric-flow` | Asistente secuencial de rúbricas: avanza un paso del flujo (nombre → proyecto → … → confirmar) |
 | `POST` | `/ai/suggest-rubric` | Sugiere puntos del orden del día de una reunión |
 | `POST` | `/ai/minutes` | Genera el acta de una reunión a partir de sus puntos y notas |
 
@@ -233,12 +282,11 @@ para que lleguen aunque la app esté cerrada:
   para WhatsApp).
 
 ### 🤖 Más capacidades del asistente de IA
-El chatbot ya **crea tareas, reuniones y eventos** y **genera rúbricas** por lenguaje natural, y dentro de la
-rúbrica la IA **sugiere el orden del día** y **redacta el acta** (ver
-[Asistente de IA](#-asistente-de-ia-chatbot)). Lo que sigue:
-- **Lectura y resumen**: preguntar *"¿qué tengo esta semana?"* o *"pendientes urgentes de Trabajo"* y obtener una
-  respuesta a partir de los datos de la app.
-- **Crear proyectos/cursos** por lenguaje natural desde el chat.
+El chatbot ya **crea tareas, reuniones y eventos**, **consulta y resume** tus ítems, **crea proyectos/cursos** y
+**crea rúbricas paso a paso** por lenguaje natural; dentro de la rúbrica la IA **sugiere el orden del día** y
+**redacta el acta** (ver [Asistente de IA](#-asistente-de-ia-chatbot)). Próximas ideas:
+- **Editar y completar ítems desde el chat**: *"marca como hecha la tarea del informe"* o *"pospón la reunión
+  al jueves"*.
 
 ### 💡 Otras ideas en estudio
 - Reordenar puntos de la rúbrica con arrastrar y soltar.

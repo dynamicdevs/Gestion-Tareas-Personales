@@ -9,6 +9,7 @@ import ProjectModal from "./components/ProjectModal";
 import Board from "./components/Board";
 import Calendar from "./components/Calendar";
 import RubricManager from "./components/RubricManager";
+import Faq from "./components/Faq";
 import ChatPanel from "./components/ChatPanel";
 import ToastStack, { type Toast } from "./components/ToastStack";
 import { useMeetingReminders } from "./useMeetingReminders";
@@ -28,7 +29,7 @@ export default function App() {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [rubricTemplates, setRubricTemplates] = useState<RubricTemplate[]>([]);
-  const [section, setSection] = useState<"tasks" | "rubrics">("tasks");
+  const [section, setSection] = useState<"tasks" | "rubrics" | "faq">("tasks");
   const [activeCategory, setActiveCategory] = useState<Category>("Trabajo");
   const [activeProject, setActiveProject] = useState<string>(""); // "" = todos los proyectos
   const [hideDone, setHideDone] = useState(false);
@@ -288,6 +289,7 @@ export default function App() {
           section={section}
           onCategory={selectCategory}
           onRubrics={() => setSection("rubrics")}
+          onFaq={() => setSection("faq")}
         />
 
         <main className="flex-1 p-6 overflow-y-auto">
@@ -299,6 +301,8 @@ export default function App() {
 
           {section === "rubrics" ? (
             <RubricManager projects={projects} onChanged={reload} />
+          ) : section === "faq" ? (
+            <Faq />
           ) : (
           <>
 
@@ -518,12 +522,15 @@ export default function App() {
       <ChatPanel
         open={chatOpen}
         projects={projects}
+        tasks={tasks}
+        rubrics={rubricTemplates}
         onClose={() => setChatOpen(false)}
         onCreate={createFromChat}
         onEdit={(d) => {
           setChatOpen(false);
           editFromChat(d);
         }}
+        onProjectCreated={reload}
       />
     </div>
   );

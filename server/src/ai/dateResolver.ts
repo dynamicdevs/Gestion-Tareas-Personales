@@ -14,6 +14,12 @@ const DAYS: Record<string, number> = {
   sábado: 6,
 };
 
+const MONTHS: Record<string, number> = {
+  enero: 0, febrero: 1, marzo: 2, abril: 3, mayo: 4, junio: 5,
+  julio: 6, agosto: 7, septiembre: 8, setiembre: 8, octubre: 9,
+  noviembre: 10, diciembre: 11,
+};
+
 function atNoon(d: Date): string {
   d.setHours(12, 0, 0, 0);
   return d.toISOString();
@@ -61,6 +67,22 @@ export function resolvePhraseToISO(phrase: string | null | undefined, now: Date 
   if (inWeeks) {
     const n = inWeeks[1] === "una" ? 1 : parseInt(inWeeks[1], 10);
     return atNoon(addDays(now, n * 7));
+  }
+
+  // Día + mes con nombre ("4 de julio", "el 29 de junio", "30 junio").
+  // Si la fecha ya pasó este año, se asume el año siguiente.
+  const dayMonth = p.match(/\b(\d{1,2})\s*(?:de\s+)?([a-zé]+)\b/);
+  if (dayMonth) {
+    const target = parseInt(dayMonth[1], 10);
+    const month = MONTHS[dayMonth[2]];
+    if (target >= 1 && target <= 31 && month !== undefined) {
+      const d = new Date(now);
+      d.setMonth(month, target);
+      if (d < now && Math.abs(d.getTime() - now.getTime()) > 24 * 60 * 60 * 1000) {
+        d.setFullYear(d.getFullYear() + 1);
+      }
+      return atNoon(d);
+    }
   }
 
   // Día del mes con número ("el 29", "el lunes 29", "el día 29").
