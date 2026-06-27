@@ -106,6 +106,26 @@ export const api = {
       if (data) return data;
       return { kind: "error", text: "No se pudo contactar con el asistente." } as AiChatResponse;
     }),
+
+  // Sugiere puntos de rúbrica para una reunión.
+  aiSuggestRubric: (title: string, objective: string) =>
+    fetch("/api/ai/suggest-rubric", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, objective }),
+    }).then((r) => handle<{ items: { title: string; kind: string }[] }>(r)),
+
+  // Genera el acta de la reunión a partir de los puntos tratados.
+  aiMinutes: (payload: {
+    title: string;
+    objective: string;
+    items: { title: string; kind: string; notes: string; responsible: string; done: boolean }[];
+  }) =>
+    fetch("/api/ai/minutes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).then((r) => handle<{ text: string }>(r)),
 };
 
 export type { ChatMessage };

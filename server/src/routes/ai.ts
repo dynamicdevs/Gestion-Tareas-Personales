@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { taskInputSchema } from "../validation.js";
 import { extractWithOllama, chatFreeform, OllamaError } from "../ai/ollamaClient.js";
+import { suggestRubricItems, generateMinutes } from "../ai/rubricAi.js";
 import { resolvePhraseToISO, applyTimeToISO } from "../ai/dateResolver.js";
 
 export const aiRouter = Router();
@@ -297,5 +298,63 @@ aiRouter.post("/chat", async (req, res) => {
     }
     console.error("Error inesperado en /api/ai/chat:", err);
     return res.status(500).json({ kind: "error", text: "Error inesperado de la IA." });
+  }
+});
+
+// Maneja errores de Ollama de forma uniforme para los endpoints de rúbrica.
+function handleAiError(err: unknown, res: any, ctx: string) {
+  if (err instanceof OllamaError) {
+    return res.status(err.kind === "down" ? 503 : 200).json({ error: err.message });
+  }
+  console.error(`Error inesperado en ${ctx}:`, err);
+  return res.status(500).json({ error: "Error inesperado de la IA." });
+}
+
+const suggestReqSchema = z.object({
+  title: z.string().min(1),
+  objective: z.string().default(""),
+});
+
+// POST /api/ai/suggest-rubric -> sugiere puntos del orden del día.
+aiRouter.post("/suggest-rubric", async (req, res) => {
+  const parsed = suggestReqSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Falta el título de la reunión." });
+  }
+  try {
+    const items = await suggestRubricItems(parsed.data.title, parsed.data.objective);
+    res.json({ items });
+  } catch (err) {
+    handleAiError(err, res, "/api/ai/suggest-rubric");
+  }
+});
+
+const minutesReqSchema = z.object({
+  title: z.string().min(1),
+  objective: z.string().default(""),
+  items: z
+    .array(
+      z.object({
+        title: z.string(),
+        kind: z.string().default("punto"),
+        notes: z.string().default(""),
+        responsible: z.string().default(""),
+        done: z.boolean().default(false),
+      })
+    )
+    .default([]),
+});
+
+// POST /api/ai/minutes -> genera el acta a partir de los puntos tratados.
+aiRouter.post("/minutes", async (req, res) => {
+  const parsed = minutesReqSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Datos de la reunión inválidos." });
+  }
+  try {
+    const text = await generateMinutes(parsed.data.title, parsed.data.objective, parsed.data.items);
+    res.json({ text });
+  } catch (err) {
+    handleAiError(err, res, "/api/ai/minutes");
   }
 });

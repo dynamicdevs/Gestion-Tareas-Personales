@@ -480,8 +480,12 @@ export default function TaskModal({
               mode="instance"
               objective={rubricObjective}
               items={rubricItems}
+              meetingTitle={title}
               onObjectiveChange={setRubricObjective}
               onItemsChange={setRubricItems}
+              onMinutesToNotes={(text) =>
+                setNotes((prev) => (prev.trim() ? prev + "\n\n" + text : text))
+              }
             />
           </div>
         )}

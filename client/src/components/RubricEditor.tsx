@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { RUBRIC_KINDS, RUBRIC_KIND_META, type RubricItemInput, type RubricKind } from "../types";
+import { api } from "../api";
+import { useConfirm } from "../confirm";
 
 interface Props {
   objective: string;
   items: RubricItemInput[];
   mode: "template" | "instance";
+  meetingTitle?: string; // título de la reunión (contexto para la IA)
   onObjectiveChange: (v: string) => void;
   onItemsChange: (items: RubricItemInput[]) => void;
+  onMinutesToNotes?: (text: string) => void; // volcar el acta a las notas de la reunión
 }
 
 const inputCls = "field-input";
@@ -15,9 +20,77 @@ function emptyItem(kind: RubricKind = "punto"): RubricItemInput {
 }
 
 // Editor reutilizable de rúbrica. En "template" solo título/tipo/orden;
-// en "instance" añade marcar tratado, notas y responsable.
-export default function RubricEditor({ objective, items, mode, onObjectiveChange, onItemsChange }: Props) {
+// en "instance" añade marcar tratado, notas y responsable, y asistencia de IA.
+export default function RubricEditor({
+  objective,
+  items,
+  mode,
+  meetingTitle = "",
+  onObjectiveChange,
+  onItemsChange,
+  onMinutesToNotes,
+}: Props) {
   const isInstance = mode === "instance";
+  const confirm = useConfirm();
+  const [suggesting, setSuggesting] = useState(false);
+  const [generatingMinutes, setGeneratingMinutes] = useState(false);
+  const [minutes, setMinutes] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  async function suggestWithAI() {
+    const title = meetingTitle.trim();
+    if (!title) {
+      setAiError("Ponle un título a la reunión para sugerir el orden del día.");
+      return;
+    }
+    if (items.some((it) => it.title.trim())) {
+      const ok = await confirm({
+        title: "Sugerir orden del día",
+        message: "Se añadirán puntos sugeridos por IA a los que ya tienes. ¿Continuar?",
+        confirmText: "Sugerir",
+      });
+      if (!ok) return;
+    }
+    setAiError(null);
+    setSuggesting(true);
+    try {
+      const res = await api.aiSuggestRubric(title, objective);
+      const nuevos: RubricItemInput[] = res.items.map((s) => ({
+        title: s.title,
+        kind: (RUBRIC_KINDS as readonly string[]).includes(s.kind) ? (s.kind as RubricKind) : "punto",
+        done: false,
+        notes: "",
+        responsible: "",
+      }));
+      // Quitamos los items vacíos previos antes de añadir las sugerencias.
+      onItemsChange([...items.filter((it) => it.title.trim()), ...nuevos]);
+    } catch {
+      setAiError("No pude sugerir el orden del día (¿está corriendo Ollama?).");
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
+  async function generateMinutesAI() {
+    setAiError(null);
+    setGeneratingMinutes(true);
+    try {
+      const res = await api.aiMinutes({
+        title: meetingTitle.trim() || "Reunión",
+        objective,
+        items: items
+          .filter((it) => it.title.trim())
+          .map((it) => ({ title: it.title, kind: it.kind, notes: it.notes, responsible: it.responsible, done: it.done })),
+      });
+      setMinutes(res.text);
+    } catch {
+      setAiError("No pude generar el acta (¿está corriendo Ollama?).");
+    } finally {
+      setGeneratingMinutes(false);
+    }
+  }
+
+  const hasNotes = items.some((it) => it.notes.trim());
 
   function update(i: number, patch: Partial<RubricItemInput>) {
     onItemsChange(items.map((it, j) => (j === i ? { ...it, ...patch } : it)));
@@ -151,6 +224,73 @@ export default function RubricEditor({ objective, items, mode, onObjectiveChange
           </button>
         ))}
       </div>
+
+      {/* Asistencia de IA (solo en la instancia de una reunión) */}
+      {isInstance && (
+        <div className="mt-3 pt-3 border-t border-line/15">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-50"
+              disabled={suggesting}
+              onClick={suggestWithAI}
+            >
+              {suggesting ? "✨ Generando…" : "✨ Sugerir con IA"}
+            </button>
+            {hasNotes && (
+              <button
+                type="button"
+                className="btn-ghost text-xs px-3 py-1.5 disabled:opacity-50"
+                disabled={generatingMinutes}
+                onClick={generateMinutesAI}
+              >
+                {generatingMinutes ? "📝 Generando…" : "📝 Generar acta"}
+              </button>
+            )}
+          </div>
+
+          {aiError && <div className="text-[11px] text-red-400 mt-2">⚠ {aiError}</div>}
+
+          {/* Acta generada */}
+          {minutes && (
+            <div className="mt-3 rounded-xl border border-accent/30 bg-accent/[0.04] p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-fg">📋 Acta generada</span>
+                <button type="button" className="text-fg-dim hover:text-fg text-xs" onClick={() => setMinutes(null)}>
+                  ✕
+                </button>
+              </div>
+              <textarea
+                className="field-input w-full text-xs resize-y"
+                rows={8}
+                value={minutes}
+                onChange={(e) => setMinutes(e.target.value)}
+              />
+              <div className="flex gap-2 mt-2">
+                <button
+                  type="button"
+                  className="btn-ghost text-xs px-3 py-1.5"
+                  onClick={() => navigator.clipboard?.writeText(minutes)}
+                >
+                  📋 Copiar
+                </button>
+                {onMinutesToNotes && (
+                  <button
+                    type="button"
+                    className="btn-primary text-xs px-3 py-1.5"
+                    onClick={() => {
+                      onMinutesToNotes(minutes);
+                      setMinutes(null);
+                    }}
+                  >
+                    ↧ Volcar a notas
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

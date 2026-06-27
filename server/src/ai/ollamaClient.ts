@@ -129,7 +129,7 @@ export class OllamaError extends Error {
   }
 }
 
-interface ChatMsg {
+export interface ChatMsg {
   role: "system" | "user" | "assistant";
   content: string;
 }
@@ -185,6 +185,34 @@ export async function extractWithOllama(messages: ChatMsg[]): Promise<AiExtracti
   }
   // Inalcanzable, pero TS lo pide.
   throw new OllamaError("invalid", "La IA devolvió una respuesta no válida.");
+}
+
+// Llamada genérica con structured output: devuelve el JSON parseado (sin validar
+// contra un schema concreto; el llamador valida). Tolerante a fences/prosa.
+export async function chatJson(messages: ChatMsg[], format: unknown): Promise<any> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const res = await ollama.chat({
+      model: MODEL,
+      messages,
+      format: format as any,
+      options: { temperature: 0.3 },
+      // @ts-expect-error: signal aceptado en runtime.
+      signal: controller.signal,
+    });
+    return JSON.parse(extractJson(res.message.content));
+  } catch (err: any) {
+    if (controller.signal.aborted) throw new OllamaError("timeout", "La IA tardó demasiado.");
+    const msg = String(err?.message || err);
+    if (/ECONNREFUSED|fetch failed|connect/i.test(msg)) {
+      throw new OllamaError("down", "No pude conectar con la IA (¿está corriendo Ollama?).");
+    }
+    if (err instanceof SyntaxError) throw new OllamaError("invalid", "La IA devolvió una respuesta no válida.");
+    throw new OllamaError("down", "Error al llamar a la IA: " + msg);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // Chat en texto libre (sin structured output). Se usa como fallback cuando la

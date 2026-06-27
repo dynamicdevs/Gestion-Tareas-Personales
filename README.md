@@ -81,6 +81,12 @@ usuario. Funciona con **Ollama** (modelo `minimax-m3:cloud`); la llamada se ejec
 - **Robusto**: las fechas relativas se resuelven en el servidor; si no entiende algo, **conversa** y pregunta o
   explica qué puede hacer, en lugar de fallar.
 
+Además, dentro de la rúbrica de una reunión hay dos asistentes de IA:
+- **✨ Sugerir con IA**: genera un orden del día (3-6 puntos clasificados) a partir del título y el objetivo de la
+  reunión. Se añaden a los puntos existentes y se pueden editar o borrar.
+- **📝 Generar acta**: a partir de las notas y responsables de los puntos tratados, redacta un acta con
+  **resumen, acuerdos y próximos pasos**. El acta se puede editar, copiar o volcar a las notas de la reunión.
+
 > Requiere **Ollama** en ejecución. Si no está disponible, el chat lo avisa con un mensaje claro (el resto de la
 > aplicación funciona igual).
 
@@ -200,6 +206,8 @@ Base: `http://localhost:4000/api`
 | `GET/POST/PATCH/DELETE` | `/projects` | CRUD de proyectos/cursos |
 | `GET/POST/PUT/DELETE` | `/rubrics` | CRUD de plantillas de rúbrica |
 | `POST` | `/ai/chat` | Asistente de IA: interpreta el mensaje y propone un borrador de ítem |
+| `POST` | `/ai/suggest-rubric` | Sugiere puntos del orden del día de una reunión |
+| `POST` | `/ai/minutes` | Genera el acta de una reunión a partir de sus puntos y notas |
 
 Los datos se guardan en `server/prisma/dev.db` y **persisten** entre reinicios.
 
@@ -225,12 +233,11 @@ para que lleguen aunque la app esté cerrada:
   para WhatsApp).
 
 ### 🤖 Más capacidades del asistente de IA
-El chatbot ya **crea tareas, reuniones y eventos** y **genera rúbricas** por lenguaje natural (ver
+El chatbot ya **crea tareas, reuniones y eventos** y **genera rúbricas** por lenguaje natural, y dentro de la
+rúbrica la IA **sugiere el orden del día** y **redacta el acta** (ver
 [Asistente de IA](#-asistente-de-ia-chatbot)). Lo que sigue:
 - **Lectura y resumen**: preguntar *"¿qué tengo esta semana?"* o *"pendientes urgentes de Trabajo"* y obtener una
   respuesta a partir de los datos de la app.
-- **Actas automáticas**: a partir de las notas tomadas durante la reunión, generar un resumen con acuerdos y
-  próximos pasos.
 - **Crear proyectos/cursos** por lenguaje natural desde el chat.
 
 ### 💡 Otras ideas en estudio
