@@ -3,18 +3,18 @@
 Aplicación web personal para organizar el trabajo del día a día: **tareas, reuniones y eventos**, repartidos en
 tres apartados (**Trabajo**, **Proyectos personales** y **Estudios**).
 
-La app funciona **en local**, en tu propio equipo: no necesita internet ni servicios externos, y tus datos se
-guardan en una base de datos en tu máquina. Está pensada como herramienta de productividad personal, con tres
-formas de ver tu trabajo (tablero, lista y calendario), recordatorios para las reuniones y plantillas
-reutilizables para preparar el orden del día.
+La aplicación funciona **en local**, en el propio equipo: no necesita internet ni servicios externos, y los datos
+se guardan en una base de datos en la máquina del usuario. Está pensada como herramienta de productividad
+personal, con tres formas de visualizar el trabajo (tablero, lista y calendario), recordatorios para las
+reuniones y plantillas reutilizables para preparar el orden del día.
 
-> **¿Para quién es este documento?** Para cualquiera que vaya a instalar, ejecutar o continuar el desarrollo de
-> la app. No hace falta conocer el código para ponerla en marcha: sigue la sección
-> [Puesta en marcha](#-puesta-en-marcha-primera-vez).
+> **¿Para quién es este documento?** Para cualquier persona que vaya a instalar, ejecutar o continuar el
+> desarrollo de la aplicación. No hace falta conocer el código para ponerla en marcha: basta con seguir la
+> sección [Puesta en marcha](#-puesta-en-marcha-primera-vez).
 
 ### 🧭 Vistazo rápido
 
-Al abrir la app verás, de izquierda a derecha:
+Al abrir la aplicación se muestra, de izquierda a derecha:
 
 1. **Barra lateral** — los apartados (Trabajo / Personal / Estudios) con el número de ítems en cada uno, y la
    sección **Rúbricas** para gestionar plantillas de reunión.
@@ -67,22 +67,22 @@ Al abrir la app verás, de izquierda a derecha:
   tratado, lleva **notas** y **responsable**, y se reordena. Editar la copia no altera la plantilla.
 
 ### 🤖 Asistente de IA (chatbot)
-Un botón flotante 🤖 abre un **chat** donde le hablás en lenguaje natural y el asistente crea las cosas por vos.
-Funciona con **Ollama** (modelo `minimax-m3:cloud`); la llamada corre en el backend.
-- **Crear por lenguaje natural**: escribís *"recordame llamar al cliente mañana, urgente"* o
-  *"reunión con el equipo el lunes a las 10, remota"* y el asistente arma la **tarea, reunión o evento** con
+Un botón flotante 🤖 abre un **chat** donde se le habla en lenguaje natural y el asistente crea los ítems por el
+usuario. Funciona con **Ollama** (modelo `minimax-m3:cloud`); la llamada se ejecuta en el backend.
+- **Crear por lenguaje natural**: al escribir *"recordar llamar al cliente mañana, urgente"* o
+  *"reunión con el equipo el lunes a las 10, remota"*, el asistente arma la **tarea, reunión o evento** con
   todos sus campos (fecha, hora, prioridad, categoría, modalidad, etiquetas).
-- **Proponer y confirmar**: nunca crea nada sin tu visto bueno. Te muestra un **borrador** que podés
-  **confirmar**, **editar** (abre el formulario precargado) o **descartar**. También entiende
-  *"que sea prioridad alta"*, *"ponela en el proyecto Foundry"* o *"dale, confirmala"*.
-- **Genera rúbricas de reunión**: si mencionás una minuta u orden del día
+- **Proponer y confirmar**: nunca crea nada sin aprobación. Muestra un **borrador** que se puede
+  **confirmar**, **editar** (abre el formulario precargado) o **descartar**. También entiende instrucciones como
+  *"que sea prioridad alta"*, *"asignarla al proyecto Foundry"* o *"confírmala"*.
+- **Genera rúbricas de reunión**: si se menciona una minuta u orden del día
   (*"con minuta para revisar pendientes, ver bloqueos y acordar la entrega"*), crea la rúbrica con los puntos
   ya **clasificados** en punto a tratar / acuerdo / próximo paso.
 - **Robusto**: las fechas relativas se resuelven en el servidor; si no entiende algo, **conversa** y pregunta o
-  explica qué puede hacer, en vez de fallar.
+  explica qué puede hacer, en lugar de fallar.
 
-> Requiere **Ollama** corriendo. Si no está disponible, el chat lo avisa con un mensaje claro (el resto de la app
-> funciona igual).
+> Requiere **Ollama** en ejecución. Si no está disponible, el chat lo avisa con un mensaje claro (el resto de la
+> aplicación funciona igual).
 
 ### Interfaz
 - **Tema claro / oscuro** con interruptor (recuerda tu preferencia), con los colores de marca de Dynamic Devs.
@@ -132,7 +132,7 @@ npm run dev
 
 Levanta ambos servicios:
 - **Backend (API)** en http://localhost:4000
-- **Frontend** en http://localhost:5174 ← **abre esto en el navegador**
+- **Frontend** en http://localhost:5174 ← **abrir esta dirección en el navegador**
 
 En desarrollo el frontend hace proxy de `/api` al backend, así que no hay problemas de CORS.
 
@@ -140,34 +140,37 @@ En desarrollo el frontend hace proxy de `/api` al backend, así que no hay probl
 
 ## 📖 Guía de uso paso a paso
 
-**Crear una tarea.** Pulsa **+ Nueva tarea** (arriba a la derecha). Elige el tipo (📋 Tarea), escribe el título,
-y completa apartado, prioridad, estado y fecha límite. Puedes añadir etiquetas, notas y subtareas. Guarda.
+**Crear una tarea.** Pulsar **+ Nueva tarea** (arriba a la derecha). Seleccionar el tipo (📋 Tarea), escribir el
+título y completar apartado, prioridad, estado y fecha límite. Se pueden añadir etiquetas, notas y subtareas.
+Guardar.
 
-**Agendar una reunión.** Crea un ítem y elige el tipo **👥 Reunión**. Aparecerán los campos de **fecha**, **hora
-de inicio y fin** y **modalidad** (presencial / remoto). Opcionalmente, despliega su **rúbrica** (orden del día).
-También puedes agendarla desde la vista **Calendario**: haz clic en una franja horaria libre.
+**Agendar una reunión.** Crear un ítem y seleccionar el tipo **👥 Reunión**. Aparecen los campos de **fecha**,
+**hora de inicio y fin** y **modalidad** (presencial / remoto). Opcionalmente, desplegar su **rúbrica** (orden
+del día). También se puede agendar desde la vista **Calendario**, haciendo clic en una franja horaria libre.
 
-**Registrar un evento de varios días.** Elige el tipo **📅 Evento** e indica fecha de **inicio** y **fin**. Útil
-para vacaciones, ausencias o conferencias; se muestra como una franja en el calendario.
+**Registrar un evento de varios días.** Seleccionar el tipo **📅 Evento** e indicar fecha de **inicio** y
+**fin**. Útil para vacaciones, ausencias o conferencias; se muestra como una franja en el calendario.
 
-**Trabajar con el tablero.** En la vista **▦ Tablero**, **arrastra** las tarjetas entre las columnas
+**Trabajar con el tablero.** En la vista **▦ Tablero**, **arrastrar** las tarjetas entre las columnas
 Pendiente / En curso / Hecha para cambiar su estado. El botón ＋ de cada columna crea un ítem ya en ese estado.
 
-**Usar el calendario.** En la vista **📅 Calendario**, navega entre meses, selecciona un día y verás su agenda
-por bloques de 30 minutos. Arrastra una reunión para moverla de hora o estira su borde inferior para alargarla.
+**Usar el calendario.** En la vista **📅 Calendario**, navegar entre meses y seleccionar un día para ver su
+agenda por bloques de 30 minutos. Arrastrar una reunión para moverla de hora, o estirar su borde inferior para
+alargarla.
 
-**Preparar rúbricas de reunión.** En la barra lateral, entra en **📋 Rúbricas** y crea una **plantilla** (un
+**Preparar rúbricas de reunión.** En la barra lateral, entrar en **📋 Rúbricas** y crear una **plantilla** (un
 guion con puntos, acuerdos y próximos pasos), opcionalmente asociada a un proyecto. Luego, al crear una reunión,
-elige esa plantilla con **"Usar plantilla…"**: su contenido se copia a la reunión, donde durante la misma marcas
-cada punto como tratado, añades notas y asignas responsables. Editar la copia no modifica la plantilla original.
+seleccionar esa plantilla con **"Usar plantilla…"**: su contenido se copia a la reunión, donde durante la misma
+se marca cada punto como tratado, se añaden notas y se asignan responsables. Editar la copia no modifica la
+plantilla original.
 
-**Recibir recordatorios.** Si tienes la app abierta, recibirás un aviso emergente con sonido a los 30, 15 y 5
+**Recibir recordatorios.** Con la aplicación abierta, se muestra un aviso emergente con sonido a los 30, 15 y 5
 minutos antes de cada reunión.
 
-**Organizar por proyectos/cursos.** Dentro de un apartado, crea proyectos (en Estudios se llaman *cursos*) y
-asígnalos a tus ítems. Usa el selector superior para filtrar por proyecto.
+**Organizar por proyectos/cursos.** Dentro de un apartado, crear proyectos (en Estudios se llaman *cursos*) y
+asignarlos a los ítems. El selector superior permite filtrar por proyecto.
 
-**Cambiar el tema.** Pulsa ☀️/🌙 en la cabecera para alternar entre claro y oscuro; tu elección se recuerda.
+**Cambiar el tema.** Pulsar ☀️/🌙 en la cabecera para alternar entre claro y oscuro; la elección se recuerda.
 
 ---
 
@@ -243,9 +246,9 @@ El chatbot ya **crea tareas, reuniones y eventos** y **genera rúbricas** por le
 - **Base de datos local**: los datos se guardan en `server/prisma/dev.db` (SQLite) y persisten entre reinicios.
   Este archivo está en `.gitignore`, así que **no se versiona**: cada entorno genera su propia base con
   `npm run db:migrate`. Para empezar con datos de ejemplo, ejecuta `npm run db:seed --workspace server`.
-- **Windows + Prisma**: si vas a correr `prisma migrate` o `prisma generate`, **detén antes el servidor de
+- **Windows + Prisma**: antes de ejecutar `prisma migrate` o `prisma generate`, **detener el servidor de
   desarrollo** (`npm run dev`), porque el proceso bloquea el motor de Prisma y la operación fallaría.
-- **Puertos**: backend en `4000`, frontend en `5174`. Si alguno está ocupado, cámbialo en
+- **Puertos**: backend en `4000`, frontend en `5174`. Si alguno está ocupado, se puede cambiar en
   `server/src/index.ts` (constante `PORT`) y en `client/vite.config.ts` (`server.port` y el `proxy`).
 
 ---
