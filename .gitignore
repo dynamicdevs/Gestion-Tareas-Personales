@@ -5,4 +5,5 @@ dist/
 .env
 server/prisma/dev.db
 server/prisma/dev.db-journal
+server/test/
 .DS_Store

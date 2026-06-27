@@ -6,6 +6,8 @@ import type {
   RubricTemplate,
   RubricTemplateFull,
   RubricInput,
+  ChatMessage,
+  AiChatResponse,
 } from "./types";
 
 const BASE = "/api/tasks";
@@ -86,4 +88,24 @@ export const api = {
     }).then((r) => handle<RubricTemplateFull>(r)),
 
   removeRubric: (id: string) => fetch(`${RUBRICS}/${id}`, { method: "DELETE" }).then((r) => handle<void>(r)),
+
+  // ---- Chatbot de IA ----
+  // Envía el historial (solo role/content) + el borrador no confirmado en curso (si lo hay).
+  aiChat: (
+    messages: { role: "user" | "assistant"; content: string }[],
+    currentDraft?: TaskInput | null,
+    projects?: { id: string; name: string; category: string }[]
+  ) =>
+    fetch("/api/ai/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages, currentDraft: currentDraft ?? null, projects: projects ?? [] }),
+    }).then(async (r) => {
+      // El endpoint devuelve siempre JSON (incluso en errores controlados).
+      const data = (await r.json().catch(() => null)) as AiChatResponse | null;
+      if (data) return data;
+      return { kind: "error", text: "No se pudo contactar con el asistente." } as AiChatResponse;
+    }),
 };
+
+export type { ChatMessage };

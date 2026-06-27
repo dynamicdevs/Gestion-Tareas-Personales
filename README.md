@@ -66,6 +66,24 @@ Al abrir la app verás, de izquierda a derecha:
   y se **copia** a esa reunión. Cada punto tiene tipo (• punto / ✅ acuerdo / ➡️ próximo paso), se marca como
   tratado, lleva **notas** y **responsable**, y se reordena. Editar la copia no altera la plantilla.
 
+### 🤖 Asistente de IA (chatbot)
+Un botón flotante 🤖 abre un **chat** donde le hablás en lenguaje natural y el asistente crea las cosas por vos.
+Funciona con **Ollama** (modelo `minimax-m3:cloud`); la llamada corre en el backend.
+- **Crear por lenguaje natural**: escribís *"recordame llamar al cliente mañana, urgente"* o
+  *"reunión con el equipo el lunes a las 10, remota"* y el asistente arma la **tarea, reunión o evento** con
+  todos sus campos (fecha, hora, prioridad, categoría, modalidad, etiquetas).
+- **Proponer y confirmar**: nunca crea nada sin tu visto bueno. Te muestra un **borrador** que podés
+  **confirmar**, **editar** (abre el formulario precargado) o **descartar**. También entiende
+  *"que sea prioridad alta"*, *"ponela en el proyecto Foundry"* o *"dale, confirmala"*.
+- **Genera rúbricas de reunión**: si mencionás una minuta u orden del día
+  (*"con minuta para revisar pendientes, ver bloqueos y acordar la entrega"*), crea la rúbrica con los puntos
+  ya **clasificados** en punto a tratar / acuerdo / próximo paso.
+- **Robusto**: las fechas relativas se resuelven en el servidor; si no entiende algo, **conversa** y pregunta o
+  explica qué puede hacer, en vez de fallar.
+
+> Requiere **Ollama** corriendo. Si no está disponible, el chat lo avisa con un mensaje claro (el resto de la app
+> funciona igual).
+
 ### Interfaz
 - **Tema claro / oscuro** con interruptor (recuerda tu preferencia), con los colores de marca de Dynamic Devs.
 - Diálogos de confirmación y formularios propios (sin los popups nativos del navegador).
@@ -178,6 +196,7 @@ Base: `http://localhost:4000/api`
 | `DELETE` | `/tasks/:id` | Elimina una tarea |
 | `GET/POST/PATCH/DELETE` | `/projects` | CRUD de proyectos/cursos |
 | `GET/POST/PUT/DELETE` | `/rubrics` | CRUD de plantillas de rúbrica |
+| `POST` | `/ai/chat` | Asistente de IA: interpreta el mensaje y propone un borrador de ítem |
 
 Los datos se guardan en `server/prisma/dev.db` y **persisten** entre reinicios.
 
@@ -188,25 +207,28 @@ Los datos se guardan en `server/prisma/dev.db` y **persisten** entre reinicios.
 Estas son las funcionalidades planificadas para las siguientes versiones. Aún **no están implementadas**;
 se documentan aquí para dar visibilidad de la dirección del proyecto.
 
-### 🔔 Recordatorios externos (email y WhatsApp)
+### 🔔📲 Recordatorios automatizados con IA (email y WhatsApp)
 Hoy los recordatorios de reunión son avisos dentro de la app (popup + sonido) y solo funcionan con la pestaña
-abierta. El objetivo es enviarlos también por canales externos para que lleguen aunque la app esté cerrada:
-- **Correo electrónico**: aviso a los 30/15/5 min antes de cada reunión, con el orden del día (la rúbrica) incluido.
-- **WhatsApp**: notificación al móvil con los datos de la reunión (hora, modalidad, enlace si es remota).
-- Requerirá un proceso en el servidor que vigile las reuniones próximas (un *scheduler*/cron) y un proveedor de
-  envío (p. ej. correo SMTP o un servicio transaccional; un proveedor de mensajería para WhatsApp).
-- Configuración por usuario: activar/desactivar cada canal y elegir con cuánta antelación avisar.
+abierta. El próximo paso es que la **IA envíe recordatorios por canales externos** al usuario que lo active,
+para que lleguen aunque la app esté cerrada:
+- **Correo electrónico**: aviso a los 30/15/5 min antes de cada reunión. La IA **redacta** el mensaje con el
+  orden del día (la rúbrica), objetivo y datos de la reunión, listo para leer.
+- **WhatsApp**: notificación al móvil con los datos de la reunión (hora, modalidad, enlace si es remota) y un
+  resumen breve generado por IA.
+- **Opt-in del usuario**: cada canal se activa/desactiva desde la configuración, eligiendo con cuánta antelación
+  avisar. Si el usuario no lo habilita, todo sigue como hasta ahora (solo avisos dentro de la app).
+- **Cómo funcionará**: un proceso en el servidor (un *scheduler*/cron) vigila las reuniones próximas, la IA
+  compone el texto, y un proveedor de envío lo despacha (correo SMTP/servicio transaccional; API de mensajería
+  para WhatsApp).
 
-### 🤖 Integración de IA
-Incorporar un asistente que entienda lenguaje natural para automatizar la gestión:
-- **Crear por lenguaje natural**: escribir "reunión con el equipo el martes a las 10, remota, 45 min" y que se
-  genere la reunión con todos sus campos. Lo mismo para tareas, eventos y proyectos/cursos.
-- **Lectura y resumen**: pedir resúmenes ("¿qué tengo esta semana?", "pendientes urgentes de Trabajo") y obtener
-  una respuesta a partir de los datos de la app.
-- **Rúbricas asistidas**: sugerir automáticamente el orden del día de una reunión según su título y contexto.
+### 🤖 Más capacidades del asistente de IA
+El chatbot ya **crea tareas, reuniones y eventos** y **genera rúbricas** por lenguaje natural (ver
+[Asistente de IA](#-asistente-de-ia-chatbot)). Lo que sigue:
+- **Lectura y resumen**: preguntar *"¿qué tengo esta semana?"* o *"pendientes urgentes de Trabajo"* y obtener una
+  respuesta a partir de los datos de la app.
 - **Actas automáticas**: a partir de las notas tomadas durante la reunión, generar un resumen con acuerdos y
   próximos pasos.
-- Se apoyará en la API existente (la IA traduce la intención del usuario a llamadas a `/api/...`).
+- **Crear proyectos/cursos** por lenguaje natural desde el chat.
 
 ### 💡 Otras ideas en estudio
 - Reordenar puntos de la rúbrica con arrastrar y soltar.

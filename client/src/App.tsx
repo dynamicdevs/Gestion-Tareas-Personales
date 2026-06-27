@@ -9,6 +9,7 @@ import ProjectModal from "./components/ProjectModal";
 import Board from "./components/Board";
 import Calendar from "./components/Calendar";
 import RubricManager from "./components/RubricManager";
+import ChatPanel from "./components/ChatPanel";
 import ToastStack, { type Toast } from "./components/ToastStack";
 import { useMeetingReminders } from "./useMeetingReminders";
 import { playChime } from "./chime";
@@ -50,6 +51,9 @@ export default function App() {
   const [prefillMeeting, setPrefillMeeting] = useState<string | null>(null);
   const [projectModalOpen, setProjectModalOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [chatOpen, setChatOpen] = useState(false);
+  // Borrador de la IA que se está editando en el TaskModal (null = no hay).
+  const [draftForModal, setDraftForModal] = useState<import("./types").TaskInput | null>(null);
 
   // Recordatorios de reunión: avisa a 30/15/5 min con popup + campanita.
   // Vigila TODAS las reuniones (no solo las del apartado visible).
@@ -131,7 +135,21 @@ export default function App() {
     setEditing(null);
     setPrefillState(null);
     setPrefillMeeting(null);
+    setDraftForModal(null);
     reload();
+  }
+
+  // Confirmar un borrador del chat: crea la tarea directamente.
+  async function createFromChat(draft: TaskInput) {
+    await api.create(draft);
+    reload();
+  }
+
+  // Editar un borrador del chat antes de guardar: abre el modal precargado.
+  function editFromChat(draft: TaskInput) {
+    setEditing(null);
+    setDraftForModal(draft);
+    setModalOpen(true);
   }
 
   async function toggleDone(task: Task) {
@@ -453,7 +471,8 @@ export default function App() {
       {modalOpen && (
         <TaskModal
           task={editing}
-          defaultCategory={activeCategory}
+          draft={draftForModal}
+          defaultCategory={draftForModal ? draftForModal.category : activeCategory}
           defaultState={prefillState ?? "pendiente"}
           defaultProjectId={editing ? editing.projectId : activeProject || null}
           defaultType={prefillMeeting ? "reunion" : "tarea"}
@@ -465,6 +484,7 @@ export default function App() {
             setEditing(null);
             setPrefillState(null);
             setPrefillMeeting(null);
+            setDraftForModal(null);
           }}
           onSave={handleSave}
         />
@@ -479,6 +499,32 @@ export default function App() {
       )}
 
       <ToastStack toasts={toasts} onDismiss={dismissToast} onOpen={openToastTask} />
+
+      {/* Botón flotante del asistente IA */}
+      {!chatOpen && (
+        <button
+          className="fixed bottom-6 right-6 z-[54] w-14 h-14 rounded-full grid place-items-center text-2xl text-on-accent shadow-xl transition hover:scale-105"
+          style={{
+            backgroundImage: "linear-gradient(135deg, rgb(var(--accent)), rgb(var(--accent-2)))",
+            boxShadow: "0 10px 30px -6px rgb(var(--accent) / 0.6)",
+          }}
+          title="Asistente IA"
+          onClick={() => setChatOpen(true)}
+        >
+          🤖
+        </button>
+      )}
+
+      <ChatPanel
+        open={chatOpen}
+        projects={projects}
+        onClose={() => setChatOpen(false)}
+        onCreate={createFromChat}
+        onEdit={(d) => {
+          setChatOpen(false);
+          editFromChat(d);
+        }}
+      />
     </div>
   );
 }

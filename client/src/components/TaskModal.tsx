@@ -29,6 +29,7 @@ interface Props {
   defaultProjectId?: string | null;
   defaultType?: TaskInput["type"];
   defaultDue?: string | null; // ISO, para preseleccionar fecha/hora (agendar desde calendario)
+  draft?: TaskInput | null; // borrador propuesto por la IA, para editar antes de crear
   projects: Project[];
   rubricTemplates: RubricTemplate[];
   onClose: () => void;
@@ -44,6 +45,7 @@ export default function TaskModal({
   defaultProjectId = null,
   defaultType = "tarea",
   defaultDue = null,
+  draft = null,
   projects,
   rubricTemplates,
   onClose,
@@ -109,12 +111,39 @@ export default function TaskModal({
         setRubricItems([]);
         setRubricSourceId(null);
       }
+    } else if (draft) {
+      // Borrador propuesto por la IA: precargar todos los campos para editar antes de crear.
+      setTitle(draft.title);
+      setType(draft.type);
+      setCategory(draft.category);
+      setPriority(draft.priority);
+      setState(draft.state);
+      setProjectId(draft.projectId);
+      setModality(draft.modality);
+      setTags(draft.tags.join(", "));
+      setNotes(draft.notes);
+      setSubtasks(draft.subtasks.map((s) => ({ text: s.text, done: s.done })));
+      setRubricObjective("");
+      setRubricItems([]);
+      setRubricSourceId(null);
+      if (draft.type === "reunion") {
+        setMeetDate(toDateInput(draft.due));
+        setStartTime(toTimeInput(draft.due));
+        setEndTime(toTimeInput(draft.endDate));
+      } else {
+        setDue(toDateInput(draft.due));
+        setEndDate(toDateInput(draft.endDate));
+      }
     } else {
       setType(defaultType);
       setCategory(defaultCategory);
       setState(defaultState);
       setProjectId(defaultProjectId);
       setModality(defaultType === "reunion" ? "presencial" : null);
+      setTitle("");
+      setNotes("");
+      setTags("");
+      setSubtasks([]);
       setDue("");
       setEndDate("");
       setMeetDate("");
@@ -133,7 +162,7 @@ export default function TaskModal({
         setDue(toDateInput(defaultDue));
       }
     }
-  }, [task, defaultCategory, defaultState, defaultProjectId, defaultType, defaultDue]);
+  }, [task, defaultCategory, defaultState, defaultProjectId, defaultType, defaultDue, draft]);
 
   // Copia una plantilla de rúbrica al estado de la reunión (instancia limpia).
   async function applyTemplate(templateId: string) {

@@ -10,13 +10,16 @@
     "db:migrate": "prisma migrate dev --name init",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "test:ai": "node test/ai_tests.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.1.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "zod": "^3.24.1"
+    "ollama": "^0.6.3",
+    "zod": "^3.24.1",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

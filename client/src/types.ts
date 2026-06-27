@@ -152,3 +152,19 @@ export function projectTerm(category: Category, plural = false): string {
   if (category === "Estudios") return plural ? "Cursos" : "Curso";
   return plural ? "Proyectos" : "Proyecto";
 }
+
+// ---- Chatbot de IA ----
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  draft?: TaskInput; // si el asistente propuso una tarea
+}
+
+// Respuesta del endpoint /api/ai/chat (discriminada por kind).
+export type AiChatResponse =
+  | { kind: "message"; text: string }
+  | { kind: "draft"; text: string; draft: TaskInput }
+  | { kind: "cancel"; text: string }
+  | { kind: "confirm"; text: string }
+  | { kind: "error"; text: string };
