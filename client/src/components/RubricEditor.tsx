@@ -43,7 +43,7 @@ export default function RubricEditor({
       setAiError("Ponle un título a la reunión para sugerir el orden del día.");
       return;
     }
-    if (items.some((it) => it.title.trim())) {
+    if (items.some((it) => (it.title ?? "").trim())) {
       const ok = await confirm({
         title: "Sugerir orden del día",
         message: "Se añadirán puntos sugeridos por IA a los que ya tienes. ¿Continuar?",
@@ -63,7 +63,7 @@ export default function RubricEditor({
         responsible: "",
       }));
       // Quitamos los items vacíos previos antes de añadir las sugerencias.
-      onItemsChange([...items.filter((it) => it.title.trim()), ...nuevos]);
+      onItemsChange([...items.filter((it) => (it.title ?? "").trim()), ...nuevos]);
     } catch {
       setAiError("No pude sugerir el orden del día (¿está corriendo Ollama?).");
     } finally {
@@ -79,7 +79,7 @@ export default function RubricEditor({
         title: meetingTitle.trim() || "Reunión",
         objective,
         items: items
-          .filter((it) => it.title.trim())
+          .filter((it) => (it.title ?? "").trim())
           .map((it) => ({ title: it.title, kind: it.kind, notes: it.notes, responsible: it.responsible, done: it.done })),
       });
       setMinutes(res.text);
@@ -90,7 +90,7 @@ export default function RubricEditor({
     }
   }
 
-  const hasNotes = items.some((it) => it.notes.trim());
+  const hasNotes = items.some((it) => (it.notes ?? "").trim());
 
   function update(i: number, patch: Partial<RubricItemInput>) {
     onItemsChange(items.map((it, j) => (j === i ? { ...it, ...patch } : it)));
@@ -140,7 +140,7 @@ export default function RubricEditor({
                 <input
                   type="checkbox"
                   className="accent-green-500 w-4 h-4 flex-shrink-0"
-                  checked={it.done}
+                  checked={!!it.done}
                   onChange={(e) => update(i, { done: e.target.checked })}
                   title="Marcar como tratado"
                 />
@@ -159,7 +159,7 @@ export default function RubricEditor({
               </select>
               <input
                 className={inputCls + " flex-1"}
-                value={it.title}
+                value={it.title ?? ""}
                 placeholder="Describe el punto..."
                 onChange={(e) => update(i, { title: e.target.value })}
               />
@@ -197,13 +197,13 @@ export default function RubricEditor({
               <div className="flex gap-2 mt-2 pl-6">
                 <input
                   className="field-input flex-1 text-sm py-1.5"
-                  value={it.responsible}
+                  value={it.responsible ?? ""}
                   placeholder="👤 Responsable"
                   onChange={(e) => update(i, { responsible: e.target.value })}
                 />
                 <input
                   className="field-input flex-[2] text-sm py-1.5"
-                  value={it.notes}
+                  value={it.notes ?? ""}
                   placeholder="📝 Notas / lo que se dijo"
                   onChange={(e) => update(i, { notes: e.target.value })}
                 />

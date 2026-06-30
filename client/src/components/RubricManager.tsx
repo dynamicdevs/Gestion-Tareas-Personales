@@ -63,12 +63,13 @@ export default function RubricManager({ projects, onChanged }: Props) {
       meetingDate: toDateInput(full.meetingDate),
       people: full.people ?? "",
       projectId: full.projectId,
+      // Normalizamos: las actas creadas por IA pueden traer items sin notes/responsible/done.
       items: full.items.map((it) => ({
-        title: it.title,
-        kind: it.kind,
-        done: it.done,
-        notes: it.notes,
-        responsible: it.responsible,
+        title: it.title ?? "",
+        kind: it.kind ?? "punto",
+        done: it.done ?? false,
+        notes: it.notes ?? "",
+        responsible: it.responsible ?? "",
       })),
     });
   }
