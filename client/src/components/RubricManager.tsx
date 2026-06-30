@@ -11,6 +11,7 @@ import {
 import { toDateInput, fromDateInput, fmtDate } from "../utils";
 import RubricEditor from "./RubricEditor";
 import { useConfirm } from "../confirm";
+import { downloadActaPdf } from "../actaPdf";
 
 interface Props {
   projects: Project[];
@@ -104,6 +105,41 @@ export default function RubricManager({ projects, onChanged }: Props) {
 
   const projectName = (id: string | null) => projects.find((p) => p.id === id)?.name ?? null;
 
+  // Descarga el acta como PDF. Desde la lista hay que traer el acta completa (con puntos).
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  async function downloadFromList(id: string) {
+    setDownloadingId(id);
+    try {
+      const full = await api.getRubric(id);
+      downloadActaPdf(full, projectName(full.projectId));
+    } catch (err) {
+      console.error("[acta-pdf] no se pudo preparar el acta:", err);
+      alert("No se pudo generar el PDF del acta. Revisa la consola (F12) para más detalle.");
+    } finally {
+      setDownloadingId(null);
+    }
+  }
+
+  // Descarga el acta que se está editando, usando los datos actuales del formulario
+  // (incluye cambios aún no guardados).
+  function downloadFromEditor() {
+    if (!editor) return;
+    downloadActaPdf(
+      {
+        id: editor.id ?? "draft",
+        name: editor.name.trim(),
+        objective: editor.objective,
+        meetingDate: fromDateInput(editor.meetingDate),
+        people: editor.people,
+        projectId: editor.projectId,
+        items: editor.items
+          .filter((it) => it.title.trim())
+          .map((it, i) => ({ ...it, id: `${i}`, order: i })),
+      },
+      projectName(editor.projectId)
+    );
+  }
+
   // Cuenta de personas involucradas (líneas no vacías).
   const countPeople = (people: string) => people.split(/\n/).map((s) => s.trim()).filter(Boolean).length;
 
@@ -172,7 +208,15 @@ export default function RubricManager({ projects, onChanged }: Props) {
             onItemsChange={(items) => setEditor({ ...editor, items })}
           />
 
-          <div className="flex justify-end gap-3 mt-6">
+          <div className="flex justify-end gap-3 mt-6 flex-wrap">
+            <button
+              className="btn-ghost px-4 py-2 text-sm disabled:opacity-50"
+              title="Descargar el acta en PDF (con los datos actuales del formulario)"
+              disabled={!editor.name.trim()}
+              onClick={downloadFromEditor}
+            >
+              ⬇ Descargar PDF
+            </button>
             <button className="btn-ghost px-4 py-2 text-sm" onClick={() => setEditor(null)}>
               Cancelar
             </button>
@@ -238,6 +282,14 @@ export default function RubricManager({ projects, onChanged }: Props) {
                 <div className="flex gap-2 mt-3 pt-3 border-t border-line/15">
                   <button className="btn-ghost px-3 py-1.5 text-xs flex-1" onClick={() => openEdit(t.id)}>
                     ✏️ Editar
+                  </button>
+                  <button
+                    className="btn-ghost px-3 py-1.5 text-xs disabled:opacity-50"
+                    title="Descargar acta en PDF"
+                    disabled={downloadingId === t.id}
+                    onClick={() => downloadFromList(t.id)}
+                  >
+                    {downloadingId === t.id ? "…" : "⬇ PDF"}
                   </button>
                   <button className="text-fg-dim hover:text-red-400 px-2 text-sm" onClick={() => remove(t.id)}>
                     🗑
