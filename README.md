@@ -77,6 +77,10 @@ Al abrir la aplicación se muestra, de izquierda a derecha:
   las **personas involucradas**, una descripción/objetivo y una lista de puntos clasificados (• punto a tratar /
   ✅ acuerdo / ➡️ próximo paso, cada uno con notas y responsable). Opcionalmente se asocian a un proyecto. La lista
   se ordena por fecha. También se pueden crear actas desde el **asistente de IA** (ver abajo).
+- **Descargar el acta en PDF**: cada acta tiene un botón **⬇ PDF** (en la lista y en el editor) que genera un
+  documento con un diseño limpio de marca (cabecera, fecha, asistentes y puntos clasificados) y abre el diálogo de
+  impresión del navegador para **guardarlo como PDF**. *(Consejo: en Chrome, desmarca "Encabezados y pies de página"
+  en el diálogo para que no salga la fecha/título que añade el navegador.)*
 - **Puntos en la reunión (opcional)**: al crear una 👥 reunión se pueden fijar algunos puntos (orden del día) si se
   quiere, o dejarlo vacío. Son puntos propios de esa reunión; no hay plantillas que copiar. Durante la reunión cada
   punto se marca como tratado, lleva notas y responsable, y se reordena.
@@ -217,6 +221,9 @@ alargarla.
 **personas involucradas** (una por línea), descripción/objetivo, opcionalmente un proyecto asociado, y los puntos
 (clasificados en punto a tratar / acuerdo / próximo paso, cada uno con notas y responsable). Las actas son
 independientes y no dependen de ninguna reunión. También se puede crear un acta desde el asistente de IA (ver abajo).
+Para **descargarla en PDF**, pulsar **⬇ PDF** (en la tarjeta del acta o dentro del editor): se abre el diálogo de
+impresión del navegador, donde se elige *"Guardar como PDF"*. En Chrome conviene desmarcar *"Encabezados y pies de
+página"* para que no aparezcan la fecha y el título que añade el navegador.
 
 **Usar el asistente de IA.** Pulsar el botón flotante **🤖** (abajo a la derecha). En lenguaje natural se puede:
 crear tareas/reuniones/eventos (*"reunión con el equipo el lunes a las 10, remota"*), consultar lo anotado
