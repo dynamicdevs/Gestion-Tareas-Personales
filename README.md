@@ -49,6 +49,9 @@ Al abrir la aplicación se muestra, de izquierda a derecha:
 - **Panel 📂 Proyectos**: editor de nombres de proyectos (renombrar/eliminar con confirmación), agrupado por
   apartado con su número de tareas y progreso. Incluye una zona **"Tareas sin proyecto"** donde se asignan
   **arrastrando** la tarea sobre la tarjeta del proyecto deseado.
+- **Proyectos finalizados**: un proyecto se puede **marcar como finalizado** (botón ✅) cuando ya está cerrado.
+  Pasa a una sección **"Proyectos finalizados"** del panel y **deja de aparecer** al crear o filtrar tareas. Desde
+  ahí se puede **↩ Reabrir** en cualquier momento (vuelve a activos) o eliminar.
 - **Panel 📈 Estadísticas**: gráficos para ver tareas por proyecto, distribución por estado y **tareas
   completadas por día** (rango de 7 / 14 / 30 días).
 - **Etiquetas** libres, **notas** y **subtareas** con barra de progreso.
@@ -234,7 +237,10 @@ paso (*"crea un acta"*). Requiere Ollama (ver [Configurar el asistente de IA](#-
 minutos antes de cada reunión.
 
 **Organizar por proyectos/cursos.** Dentro de un apartado, crear proyectos (en Estudios se llaman *cursos*) y
-asignarlos a los ítems. El selector superior permite filtrar por proyecto.
+asignarlos a los ítems. El selector superior permite filtrar por proyecto. En el panel **📂 Proyectos** se pueden
+renombrar, asignar tareas sueltas arrastrándolas, y **marcar como finalizado** (✅) los que ya estén cerrados:
+estos pasan a la sección **"Proyectos finalizados"** y dejan de aparecer en los selectores hasta que se
+**reabran** (↩).
 
 **Resolver dudas.** En la barra lateral, **❓ FAQ / Ayuda** reúne preguntas frecuentes que explican toda la
 aplicación.
@@ -266,7 +272,7 @@ Base: `http://localhost:4000/api`
 | `PUT` | `/tasks/:id` | Reemplaza una tarea completa |
 | `PATCH` | `/tasks/:id` | Actualización parcial (estado, fechas…) |
 | `DELETE` | `/tasks/:id` | Elimina una tarea |
-| `GET/POST/PATCH/DELETE` | `/projects` | CRUD de proyectos/cursos |
+| `GET/POST/PATCH/DELETE` | `/projects` | CRUD de proyectos/cursos. El `PATCH` renombra (`name`) y/o finaliza/reabre (`finished: true\|false`) |
 | `GET/POST/PUT/DELETE` | `/rubrics` | CRUD de actas (filtro opcional: `projectId`). *(La ruta mantiene el nombre `rubrics` por compatibilidad; de cara al usuario son "actas".)* |
 | `POST` | `/ai/chat` | Asistente de IA: propone un borrador de ítem, responde consultas/resúmenes, crea proyectos o inicia el asistente de actas |
 | `POST` | `/ai/rubric-flow` | Asistente secuencial de actas: avanza un paso del flujo (nombre → proyecto → … → confirmar) |
