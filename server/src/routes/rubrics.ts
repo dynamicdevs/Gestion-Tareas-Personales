@@ -9,6 +9,7 @@ const include = { items: true } as const;
 function serialize(t: any) {
   return {
     ...t,
+    meetingDate: t.meetingDate ? new Date(t.meetingDate).toISOString() : null,
     items: (t.items ?? []).sort((a: any, b: any) => a.order - b.order),
   };
 }
@@ -18,13 +19,13 @@ function buildItems(items: { title: string; kind: string }[]) {
   return { create: items.map((it, i) => ({ title: it.title, kind: it.kind, order: i })) };
 }
 
-// GET /api/rubrics?projectId=...  -> lista de plantillas (con conteo de puntos)
+// GET /api/rubrics?projectId=...  -> lista de actas (con conteo de puntos)
 rubricsRouter.get("/", async (req, res) => {
   const { projectId } = req.query as Record<string, string | undefined>;
   const where = projectId ? { projectId } : {};
   const templates = await prisma.rubricTemplate.findMany({
     where,
-    orderBy: { createdAt: "asc" },
+    orderBy: [{ meetingDate: "desc" }, { createdAt: "desc" }],
     include: { _count: { select: { items: true } } },
   });
   res.json(
@@ -32,6 +33,8 @@ rubricsRouter.get("/", async (req, res) => {
       id: t.id,
       name: t.name,
       objective: t.objective,
+      meetingDate: t.meetingDate ? t.meetingDate.toISOString() : null,
+      people: t.people,
       projectId: t.projectId,
       itemCount: t._count.items,
     }))
@@ -56,6 +59,8 @@ rubricsRouter.post("/", async (req, res) => {
     data: {
       name: d.name,
       objective: d.objective,
+      meetingDate: d.meetingDate ? new Date(d.meetingDate) : null,
+      people: d.people ?? "",
       projectId: d.projectId ?? null,
       items: buildItems(d.items),
     },
@@ -80,6 +85,8 @@ rubricsRouter.put("/:id", async (req, res) => {
     data: {
       name: d.name,
       objective: d.objective,
+      meetingDate: d.meetingDate ? new Date(d.meetingDate) : null,
+      people: d.people ?? "",
       projectId: d.projectId ?? null,
       items: buildItems(d.items),
     },

@@ -57,22 +57,36 @@ export interface RubricInput {
   items: RubricItemInput[];
 }
 
-// Resumen de plantilla (lista).
+// Resumen de acta (lista).
 export interface RubricTemplate {
   id: string;
   name: string;
   objective: string;
+  meetingDate: string | null;
+  people: string;
   projectId: string | null;
   itemCount: number;
 }
 
-// Plantilla completa con items.
+// Acta completa con items.
 export interface RubricTemplateFull {
   id: string;
   name: string;
   objective: string;
+  meetingDate: string | null;
+  people: string;
   projectId: string | null;
   items: (RubricItemInput & { id: string; order: number })[];
+}
+
+// Datos del formulario de acta (lo que envía el cliente al guardar).
+export interface MinuteInput {
+  name: string;
+  objective: string;
+  meetingDate: string | null;
+  people: string;
+  projectId: string | null;
+  items: RubricItemInput[];
 }
 
 export interface Task {

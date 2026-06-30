@@ -61,13 +61,18 @@ model Project {
   @@index([category])
 }
 
-// ---- Rúbricas de reunión ----
+// ---- Actas de reunión ----
 
-// Plantilla reutilizable (guion/orden del día), opcionalmente ligada a un proyecto.
+// Acta independiente (registro de una reunión), opcionalmente ligada a un proyecto.
+// Conserva el nombre de modelo RubricTemplate por compatibilidad con datos existentes.
 model RubricTemplate {
   id        String  @id @default(cuid())
   name      String
   objective String  @default("")
+  // Fecha del acta (cuándo se celebró la reunión). Opcional.
+  meetingDate DateTime?
+  // Personas involucradas, una por línea (texto libre). Opcional.
+  people    String  @default("")
   project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   projectId String?
   items     RubricTemplateItem[]

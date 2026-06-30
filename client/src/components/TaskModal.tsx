@@ -13,14 +13,11 @@ import {
   type Task,
   type TaskInput,
   type Project,
-  type RubricTemplate,
   type RubricInput,
   type RubricItemInput,
 } from "../types";
 import { toDateInput, fromDateInput, toTimeInput, combineDateTime, addMinutesToTime } from "../utils";
-import { api } from "../api";
 import RubricEditor from "./RubricEditor";
-import { useConfirm } from "../confirm";
 
 interface Props {
   task: Task | null; // null = crear
@@ -31,7 +28,6 @@ interface Props {
   defaultDue?: string | null; // ISO, para preseleccionar fecha/hora (agendar desde calendario)
   draft?: TaskInput | null; // borrador propuesto por la IA, para editar antes de crear
   projects: Project[];
-  rubricTemplates: RubricTemplate[];
   onClose: () => void;
   onSave: (data: TaskInput) => void;
 }
@@ -47,11 +43,9 @@ export default function TaskModal({
   defaultDue = null,
   draft = null,
   projects,
-  rubricTemplates,
   onClose,
   onSave,
 }: Props) {
-  const confirm = useConfirm();
   const [title, setTitle] = useState("");
   const [type, setType] = useState<TaskInput["type"]>("tarea");
   const [category, setCategory] = useState<TaskInput["category"]>(defaultCategory);
@@ -164,31 +158,6 @@ export default function TaskModal({
     }
   }, [task, defaultCategory, defaultState, defaultProjectId, defaultType, defaultDue, draft]);
 
-  // Copia una plantilla de rúbrica al estado de la reunión (instancia limpia).
-  async function applyTemplate(templateId: string) {
-    if (!templateId) return;
-    if (rubricItems.length > 0) {
-      const ok = await confirm({
-        title: "Reemplazar rúbrica",
-        message: "Esto reemplazará la rúbrica actual de la reunión. ¿Continuar?",
-        confirmText: "Reemplazar",
-      });
-      if (!ok) return;
-    }
-    const full = await api.getRubric(templateId);
-    setRubricObjective(full.objective);
-    setRubricSourceId(full.id);
-    setRubricItems(
-      full.items.map((it) => ({
-        title: it.title,
-        kind: it.kind,
-        done: false,
-        notes: "",
-        responsible: "",
-      }))
-    );
-  }
-
   // Cuando cambia la hora de inicio, ajustamos el fin para mantener al menos 30 min.
   function changeStart(t: string) {
     setStartTime(t);
@@ -265,9 +234,6 @@ export default function TaskModal({
       items: items.map((it) => ({ ...it, title: it.title.trim() })),
     };
   }
-
-  // Plantillas aplicables: las del proyecto elegido + las generales (sin proyecto).
-  const applicableTemplates = rubricTemplates.filter((t) => !t.projectId || t.projectId === projectId);
 
   const inputCls = "field-input";
 
@@ -457,24 +423,12 @@ export default function TaskModal({
           placeholder="Detalles, enlaces, contexto..."
         />
 
-        {/* Apartado Rúbrica (solo reuniones), separado del resto */}
+        {/* Puntos de la reunión (opcional, puede quedar vacío) */}
         {type === "reunion" && (
           <div className="mb-4 rounded-2xl border border-accent/30 bg-accent/[0.04] p-3">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-fg flex items-center gap-2">📋 Rúbrica de la reunión</h3>
-              <select
-                className="bg-surface-soft border border-line/30 rounded-lg text-xs px-2 py-1.5 text-fg cursor-pointer"
-                value=""
-                onChange={(e) => applyTemplate(e.target.value)}
-                title="Usar una plantilla"
-              >
-                <option value="">Usar plantilla…</option>
-                {applicableTemplates.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
+              <h3 className="text-sm font-bold text-fg flex items-center gap-2">📋 Puntos de la reunión</h3>
+              <span className="text-[11px] text-fg-dim">Opcional</span>
             </div>
             <RubricEditor
               mode="instance"

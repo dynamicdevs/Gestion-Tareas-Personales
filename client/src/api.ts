@@ -5,7 +5,7 @@ import type {
   Category,
   RubricTemplate,
   RubricTemplateFull,
-  RubricInput,
+  MinuteInput,
   ChatMessage,
   AiChatResponse,
 } from "./types";
@@ -80,14 +80,14 @@ export const api = {
 
   getRubric: (id: string) => fetch(`${RUBRICS}/${id}`).then((r) => handle<RubricTemplateFull>(r)),
 
-  createRubric: (data: RubricInput & { projectId: string | null }) =>
+  createRubric: (data: MinuteInput) =>
     fetch(RUBRICS, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }).then((r) => handle<RubricTemplateFull>(r)),
 
-  updateRubric: (id: string, data: RubricInput & { projectId: string | null }) =>
+  updateRubric: (id: string, data: MinuteInput) =>
     fetch(`${RUBRICS}/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },

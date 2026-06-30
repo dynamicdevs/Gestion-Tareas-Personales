@@ -29,10 +29,14 @@ export const meetingRubricSchema = z.object({
   items: z.array(rubricItemSchema).default([]),
 });
 
-// Plantilla de rúbrica.
+// Acta de reunión (entidad independiente).
 export const rubricTemplateInputSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio").max(160),
   objective: z.string().max(3000).default(""),
+  // Fecha del acta (ISO) o null.
+  meetingDate: z.string().datetime().nullable().optional(),
+  // Personas involucradas (texto libre, una por línea).
+  people: z.string().max(2000).default(""),
   projectId: z.string().nullable().optional(),
   items: z.array(rubricItemSchema).default([]),
 });

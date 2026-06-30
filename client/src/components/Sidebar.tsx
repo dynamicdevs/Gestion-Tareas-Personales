@@ -61,7 +61,7 @@ export default function Sidebar({
       <h3 className="text-[11px] uppercase tracking-wider text-fg-dim mb-2 mt-6 px-2">Herramientas</h3>
       <div className="space-y-1">
         <div className={itemCls(section === "rubrics")} onClick={onRubrics}>
-          <span>📋 Rúbricas</span>
+          <span>📝 Actas</span>
         </div>
         <div className={itemCls(section === "faq")} onClick={onFaq}>
           <span>❓ FAQ / Ayuda</span>

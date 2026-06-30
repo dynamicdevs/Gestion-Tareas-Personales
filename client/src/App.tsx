@@ -490,7 +490,6 @@ export default function App() {
           defaultType={prefillMeeting ? "reunion" : "tarea"}
           defaultDue={prefillMeeting}
           projects={projects}
-          rubricTemplates={rubricTemplates}
           onClose={() => {
             setModalOpen(false);
             setEditing(null);

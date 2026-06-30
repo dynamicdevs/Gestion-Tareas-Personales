@@ -44,20 +44,20 @@ const SECTIONS: { title: string; icon: string; items: QA[] }[] = [
     ],
   },
   {
-    title: "Reuniones y rúbricas",
-    icon: "📋",
+    title: "Reuniones y actas",
+    icon: "📝",
     items: [
       {
-        q: "¿Qué es una rúbrica?",
-        a: "Un guion reutilizable (orden del día) para preparar tus reuniones. Se gestiona en la sección 📋 Rúbricas y se puede asociar a un proyecto. Cada punto se clasifica en • punto a tratar, ✅ acuerdo o ➡️ próximo paso.",
+        q: "¿Qué es un acta?",
+        a: "El registro independiente de una reunión: tiene nombre, fecha, personas involucradas y los puntos tratados. Se gestionan en la sección 📝 Actas y, si quieres, se asocian a un proyecto. Cada punto se clasifica en • punto a tratar, ✅ acuerdo o ➡️ próximo paso.",
       },
       {
-        q: "¿En qué se diferencian la rúbrica y el acta?",
-        a: "La rúbrica es la plantilla independiente que preparas de antemano (vive en la sección Rúbricas, asociada a un proyecto). El acta es el resumen de lo hablado y se genera dentro de una reunión concreta, enlazada a ella.",
+        q: "¿Las actas dependen de una reunión?",
+        a: "No. Las actas son entidades autónomas: las creas y editas directamente en la sección Actas, sin necesidad de crear una reunión. Una reunión y un acta son cosas separadas.",
       },
       {
-        q: "¿Cómo uso una rúbrica en una reunión?",
-        a: "Al crear una reunión, elige 'Usar plantilla…': su contenido se copia a la reunión. Durante la misma marcas cada punto como tratado, añades notas y asignas responsables. Editar la copia no cambia la rúbrica original.",
+        q: "¿Puedo añadir puntos a una reunión?",
+        a: "Sí, pero es opcional. Al crear una reunión puedes fijar algunos puntos (orden del día) si quieres, o dejarlo vacío. No hay plantillas que aplicar: los puntos son propios de esa reunión.",
       },
       {
         q: "¿Recibo recordatorios de las reuniones?",
@@ -75,11 +75,11 @@ const SECTIONS: { title: string; icon: string; items: QA[] }[] = [
       },
       {
         q: "¿Qué le puedo preguntar?",
-        a: "Por lo que ya tienes anotado: '¿qué tengo esta semana?', 'pendientes urgentes de Trabajo', '¿qué hay vencido?', '¿tengo rúbricas?'. Responde con tus datos reales, nunca inventa.",
+        a: "Por lo que ya tienes anotado: '¿qué tengo esta semana?', 'pendientes urgentes de Trabajo', '¿qué hay vencido?', '¿tengo actas?'. Responde con tus datos reales, nunca inventa.",
       },
       {
-        q: "¿Puede crear proyectos y rúbricas?",
-        a: "Sí. Puedes pedirle 'crea un proyecto llamado Foundry' o 'crea una rúbrica de daily standup para el proyecto Foundry'. Para las rúbricas te guía paso a paso (nombre, proyecto, descripción y puntos) antes de crearla.",
+        q: "¿Puede crear proyectos y actas?",
+        a: "Sí. Puedes pedirle 'crea un proyecto llamado Foundry' o 'crea un acta de daily standup para el proyecto Foundry'. Para las actas te guía paso a paso (nombre, proyecto, descripción y puntos) antes de crearla.",
       },
       {
         q: "Necesita Ollama, ¿qué pasa si no está?",
