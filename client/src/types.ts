@@ -24,6 +24,8 @@ export interface Project {
   name: string;
   category: Category;
   taskCount: number;
+  // Fecha ISO en que se finalizó, o null si está activo.
+  finishedAt: string | null;
 }
 
 // ---- Rúbricas ----

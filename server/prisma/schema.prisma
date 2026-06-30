@@ -54,6 +54,8 @@ model Project {
   name      String
   // "Trabajo" | "Personal" | "Estudios"
   category  String
+  // Fecha en que se marcó como finalizado. null = proyecto activo.
+  finishedAt DateTime?
   tasks     Task[]
   rubricTemplates RubricTemplate[]
   createdAt DateTime @default(now())

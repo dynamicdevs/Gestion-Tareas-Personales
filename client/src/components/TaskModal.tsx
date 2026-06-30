@@ -175,7 +175,11 @@ export default function TaskModal({
   }
 
   // Proyectos disponibles para la categoría seleccionada en el formulario.
-  const availableProjects = projects.filter((p) => p.category === category);
+  // Se ocultan los finalizados, salvo que la tarea editada ya pertenezca a uno
+  // (para no perder su asignación al editarla).
+  const availableProjects = projects.filter(
+    (p) => p.category === category && (!p.finishedAt || p.id === projectId)
+  );
 
   // Una reunión con fin <= inicio es inválida.
   const invalidMeetingTime = type === "reunion" && !!startTime && !!endTime && endTime <= startTime;

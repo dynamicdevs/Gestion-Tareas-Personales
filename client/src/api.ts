@@ -73,6 +73,14 @@ export const api = {
       body: JSON.stringify({ name }),
     }).then((r) => handle<{ id: string; name: string; category: Category }>(r)),
 
+  // Finaliza (finished=true) o reabre (false) un proyecto.
+  setProjectFinished: (id: string, finished: boolean) =>
+    fetch(`${PROJECTS}/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ finished }),
+    }).then((r) => handle<Project>(r)),
+
   removeProject: (id: string) => fetch(`${PROJECTS}/${id}`, { method: "DELETE" }).then((r) => handle<void>(r)),
 
   // ---- Plantillas de rúbrica ----

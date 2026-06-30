@@ -102,7 +102,8 @@ export default function App() {
   }
 
   // Proyectos del apartado actual.
-  const categoryProjects = projects.filter((p) => p.category === activeCategory);
+  // Para el selector: solo proyectos activos (los finalizados se ocultan).
+  const categoryProjects = projects.filter((p) => p.category === activeCategory && !p.finishedAt);
 
   async function createProject(name: string) {
     const created = await api.createProject(name, activeCategory);

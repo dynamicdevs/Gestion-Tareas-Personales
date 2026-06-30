@@ -184,8 +184,31 @@ export default function ProjectsManager({ projects, tasks, onChanged }: Props) {
     onChanged();
   }
 
-  const totalProjects = projects.length;
-  const totalTasksInProjects = projects.reduce((acc, p) => acc + p.taskCount, 0);
+  // Marca un proyecto como finalizado (pide confirmación).
+  async function finishProject(p: Project) {
+    const term = projectTerm(p.category).toLowerCase();
+    const ok = await confirm({
+      title: `Finalizar ${term}`,
+      message: `¿Marcar el ${term} "${p.name}" como finalizado? Dejará de aparecer al crear o filtrar tareas; podrás reabrirlo cuando quieras.`,
+      confirmText: "Finalizar",
+    });
+    if (!ok) return;
+    await api.setProjectFinished(p.id, true);
+    onChanged();
+  }
+
+  // Reabre un proyecto finalizado.
+  async function reopenProject(p: Project) {
+    await api.setProjectFinished(p.id, false);
+    onChanged();
+  }
+
+  // Proyectos activos / finalizados.
+  const activeProjects = projects.filter((p) => !p.finishedAt);
+  const finishedProjects = projects.filter((p) => p.finishedAt);
+
+  const totalProjects = activeProjects.length;
+  const totalTasksInProjects = activeProjects.reduce((acc, p) => acc + p.taskCount, 0);
   const dragging = dragTask !== null;
 
   return (
@@ -221,7 +244,7 @@ export default function ProjectsManager({ projects, tasks, onChanged }: Props) {
       {/* Grupos por apartado */}
       <div className="space-y-8">
         {CATEGORIES.map((cat) => {
-          const items = projects.filter((p) => p.category === cat);
+          const items = activeProjects.filter((p) => p.category === cat);
           const tasksInCat = items.reduce((acc, p) => acc + p.taskCount, 0);
           return (
             <section key={cat}>
@@ -298,6 +321,13 @@ export default function ProjectsManager({ projects, tasks, onChanged }: Props) {
                                 ✏️
                               </button>
                               <button
+                                className="text-fg-dim hover:text-green-400 transition text-sm"
+                                title="Marcar como finalizado"
+                                onClick={() => finishProject(p)}
+                              >
+                                ✅
+                              </button>
+                              <button
                                 className="text-fg-dim hover:text-red-400 transition text-sm"
                                 title="Eliminar"
                                 onClick={() => remove(p)}
@@ -341,6 +371,54 @@ export default function ProjectsManager({ projects, tasks, onChanged }: Props) {
           );
         })}
       </div>
+
+      {/* Proyectos finalizados */}
+      {finishedProjects.length > 0 && (
+        <section className="mt-10">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">✅</span>
+            <h3 className="font-semibold text-fg">Proyectos finalizados</h3>
+            <span className="text-xs text-fg-dim">· {finishedProjects.length}</span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {finishedProjects.map((p) => {
+              const done = doneByProject[p.id] || 0;
+              return (
+                <div key={p.id} className="glass rounded-2xl p-4 flex flex-col gap-3 opacity-75">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-medium text-fg break-words flex-1">
+                      <span className="mr-1">{CATEGORY_META[p.category].icon}</span>
+                      {p.name}
+                    </span>
+                    <span className="text-[11px] text-green-400 whitespace-nowrap mt-0.5">✔ Finalizado</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-fg-dim">
+                    <span className="text-fg font-semibold text-base">{p.taskCount}</span>
+                    <span>tareas</span>
+                    <span className="ml-auto">{done}/{p.taskCount} hechas</span>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      className="btn-ghost px-3 py-1.5 text-xs flex-1"
+                      title="Reabrir el proyecto (vuelve a aparecer al crear/filtrar tareas)"
+                      onClick={() => reopenProject(p)}
+                    >
+                      ↩ Reabrir
+                    </button>
+                    <button
+                      className="text-fg-dim hover:text-red-400 px-2 text-sm"
+                      title="Eliminar"
+                      onClick={() => remove(p)}
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Tareas sin proyecto: arrastrar sobre un proyecto para asociarlas */}
       <section className="mt-10">
