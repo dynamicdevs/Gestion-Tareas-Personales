@@ -3,11 +3,13 @@
 Aplicación web personal para organizar el trabajo del día a día: **tareas, reuniones y eventos**, repartidos en
 tres apartados (**Trabajo**, **Proyectos personales** y **Estudios**).
 
-La aplicación funciona **en local**, en el propio equipo: no necesita internet ni servicios externos, y los datos
-se guardan en una base de datos en la máquina del usuario. Está pensada como herramienta de productividad
-personal, con tres formas de visualizar el trabajo (tablero, lista y calendario), recordatorios para las
-reuniones, rúbricas reutilizables para preparar el orden del día y un **asistente de IA** que crea y consulta
-ítems en lenguaje natural.
+La aplicación funciona **en local**, en el propio equipo: los datos se guardan en una base de datos en la
+máquina del usuario y la gestión de tareas no depende de servicios externos. La **única parte que necesita
+internet** es el **asistente de IA**, que se apoya en Ollama con un modelo en la nube (`minimax-m3:cloud`);
+todo lo demás (vistas, recordatorios, actas, proyectos) funciona sin conexión. Está pensada como herramienta de
+productividad personal, con tres formas de visualizar el trabajo (tablero, lista y calendario), recordatorios
+para las reuniones, **actas** para registrar las reuniones y un **asistente de IA** que crea y consulta ítems en
+lenguaje natural.
 
 > **¿Para quién es este documento?** Para cualquier persona que vaya a instalar, ejecutar o continuar el
 > desarrollo de la aplicación. No hace falta conocer el código para ponerla en marcha: basta con seguir la
@@ -17,9 +19,10 @@ reuniones, rúbricas reutilizables para preparar el orden del día y un **asiste
 
 Al abrir la aplicación se muestra, de izquierda a derecha:
 
-1. **Barra lateral** — los apartados (Trabajo / Personal / Estudios) con el número de ítems en cada uno, y la
-   sección **Herramientas** con **📋 Rúbricas** (guiones reutilizables para reuniones) y **❓ FAQ / Ayuda**
-   (preguntas frecuentes que explican toda la aplicación).
+1. **Barra lateral** — los apartados (Trabajo / Personal / Estudios) con el número de ítems en cada uno; la
+   sección **Paneles** con **📂 Proyectos** (editor de nombres + dashboard) y **📈 Estadísticas** (gráficos);
+   y la sección **Herramientas** con **📝 Actas** (registro de reuniones) y **❓ FAQ / Ayuda** (preguntas
+   frecuentes que explican toda la aplicación).
 2. **Cabecera** — el logo de Dynamic Devs, el botón ☀️/🌙 para cambiar entre tema claro y oscuro, y el botón
    **+ Nueva tarea**.
 3. **Zona principal** — tarjetas de resumen (totales, completadas, próximas a vencer, vencidas), un selector de
@@ -43,6 +46,11 @@ Al abrir la aplicación se muestra, de izquierda a derecha:
 - **Tres apartados** en la barra lateral: 💼 Trabajo, 🚀 Proyectos personales, 🎓 Estudios, cada uno con su contador.
 - **Proyectos / Cursos**: agrupa ítems dentro de un apartado. En Trabajo y Personal se llaman *Proyectos*;
   en Estudios, *Cursos*. Se crean, asignan, filtran y eliminan (al borrar un proyecto, sus tareas no se pierden).
+- **Panel 📂 Proyectos**: editor de nombres de proyectos (renombrar/eliminar con confirmación), agrupado por
+  apartado con su número de tareas y progreso. Incluye una zona **"Tareas sin proyecto"** donde se asignan
+  **arrastrando** la tarea sobre la tarjeta del proyecto deseado.
+- **Panel 📈 Estadísticas**: gráficos para ver tareas por proyecto, distribución por estado y **tareas
+  completadas por día** (rango de 7 / 14 / 30 días).
 - **Etiquetas** libres, **notas** y **subtareas** con barra de progreso.
 
 ### Tipos de ítem
@@ -64,14 +72,14 @@ Al abrir la aplicación se muestra, de izquierda a derecha:
 ### Reuniones avanzadas
 - **Recordatorios automáticos**: aviso emergente (toast) + **campanita** a los **30, 15 y 5 minutos** antes
   de cada reunión (mientras la app esté abierta).
-- **Rúbricas**: guiones reutilizables (orden del día) gestionados en la sección **📋 Rúbricas** de la barra
-  lateral. Cada rúbrica es **independiente** y se puede **asociar a un proyecto**; tiene un nombre, una
-  descripción/objetivo y una lista de puntos clasificados (• punto a tratar / ✅ acuerdo / ➡️ próximo paso).
-  Al crear una reunión se elige una rúbrica con **"Usar plantilla…"** y se **copia** a esa reunión, donde cada
-  punto se marca como tratado, lleva **notas** y **responsable**, y se reordena. Editar la copia no altera la
-  rúbrica original. También se pueden crear rúbricas desde el **asistente de IA** (ver abajo).
-- **Acta de reunión**: distinta de la rúbrica. La rúbrica se prepara de antemano (vive en la sección Rúbricas);
-  el **acta** es el resumen de lo hablado y se genera *dentro* de una reunión concreta, enlazada a ella.
+- **Actas**: registro de tus reuniones, gestionadas en la sección **📝 Actas** de la barra lateral. Cada acta es
+  una **entidad independiente** (no una plantilla que se aplique a reuniones): tiene un **nombre**, una **fecha**,
+  las **personas involucradas**, una descripción/objetivo y una lista de puntos clasificados (• punto a tratar /
+  ✅ acuerdo / ➡️ próximo paso, cada uno con notas y responsable). Opcionalmente se asocian a un proyecto. La lista
+  se ordena por fecha. También se pueden crear actas desde el **asistente de IA** (ver abajo).
+- **Puntos en la reunión (opcional)**: al crear una 👥 reunión se pueden fijar algunos puntos (orden del día) si se
+  quiere, o dejarlo vacío. Son puntos propios de esa reunión; no hay plantillas que copiar. Durante la reunión cada
+  punto se marca como tratado, lleva notas y responsable, y se reordena.
 
 ### 🤖 Asistente de IA (chatbot)
 Un botón flotante 🤖 abre un **chat** donde se le habla en lenguaje natural y el asistente crea los ítems por el
@@ -89,7 +97,7 @@ usuario. Funciona con **Ollama** (modelo `minimax-m3:cloud`); la llamada se ejec
   son **siempre fieles** y nunca inventa ítems.
 - **Crea proyectos y cursos por lenguaje natural**: *"crea un proyecto llamado Foundry"* o *"nuevo curso de
   inglés en Estudios"*. Detecta el apartado (los *cursos* van a Estudios) y evita duplicados.
-- **Asistente secuencial de rúbricas**: al pedir *"crea una rúbrica"*, te guía **paso a paso** preguntando
+- **Asistente secuencial de actas**: al pedir *"crea un acta"*, te guía **paso a paso** preguntando
   nombre → proyecto (si no existe, ofrece **crearlo**) → descripción/objetivo → puntos a tratar → acuerdos →
   próximos pasos → confirmación. En cualquier momento puedes decir *"editar nombre"* (o el campo que sea) para
   volver a ese paso, o *"cancelar"*. Si ya diste algún dato al inicio, se saltan esos pasos. Antes de crearla
@@ -97,7 +105,7 @@ usuario. Funciona con **Ollama** (modelo `minimax-m3:cloud`); la llamada se ejec
 - **Robusto**: las fechas relativas se resuelven en el servidor; si no entiende algo, **conversa** y pregunta o
   explica qué puede hacer, en lugar de fallar. Responde siempre en español neutro.
 
-Además, dentro de la rúbrica de una reunión hay dos asistentes de IA:
+Además, dentro de los puntos de una reunión (y al editar un acta) hay dos asistentes de IA:
 - **✨ Sugerir con IA**: genera un orden del día (3-6 puntos clasificados) a partir del título y el objetivo de la
   reunión. Se añaden a los puntos existentes y se pueden editar o borrar.
 - **📝 Generar acta**: a partir de las notas y responsables de los puntos tratados, redacta un acta con
@@ -109,8 +117,8 @@ Además, dentro de la rúbrica de una reunión hay dos asistentes de IA:
 ### Interfaz
 - **Tema claro / oscuro** con interruptor (recuerda tu preferencia), con los colores de marca de Dynamic Devs.
 - Diálogos de confirmación y formularios propios (sin los popups nativos del navegador).
-- **❓ FAQ / Ayuda**: sección en la barra lateral (debajo de Rúbricas) con preguntas frecuentes plegables que
-  explican todo el software, incluida la diferencia entre rúbrica y acta y **cómo instalar Ollama**.
+- **❓ FAQ / Ayuda**: sección en la barra lateral (debajo de Actas) con preguntas frecuentes plegables que
+  explican todo el software, incluido el funcionamiento de las actas y **cómo instalar Ollama**.
 
 ---
 
@@ -191,8 +199,9 @@ título y completar apartado, prioridad, estado y fecha límite. Se pueden añad
 Guardar.
 
 **Agendar una reunión.** Crear un ítem y seleccionar el tipo **👥 Reunión**. Aparecen los campos de **fecha**,
-**hora de inicio y fin** y **modalidad** (presencial / remoto). Opcionalmente, desplegar su **rúbrica** (orden
-del día). También se puede agendar desde la vista **Calendario**, haciendo clic en una franja horaria libre.
+**hora de inicio y fin** y **modalidad** (presencial / remoto). Opcionalmente, fijar algunos **puntos** (orden
+del día) en la reunión, o dejarlo vacío. También se puede agendar desde la vista **Calendario**, haciendo clic
+en una franja horaria libre.
 
 **Registrar un evento de varios días.** Seleccionar el tipo **📅 Evento** e indicar fecha de **inicio** y
 **fin**. Útil para vacaciones, ausencias o conferencias; se muestra como una franja en el calendario.
@@ -204,16 +213,15 @@ Pendiente / En curso / Hecha para cambiar su estado. El botón ＋ de cada colum
 agenda por bloques de 30 minutos. Arrastrar una reunión para moverla de hora, o estirar su borde inferior para
 alargarla.
 
-**Preparar rúbricas.** En la barra lateral, entrar en **📋 Rúbricas** y crear una (un guion con puntos,
-acuerdos y próximos pasos), con nombre, descripción/objetivo y, opcionalmente, un proyecto asociado. Luego, al
-crear una reunión, seleccionar esa rúbrica con **"Usar plantilla…"**: su contenido se copia a la reunión, donde
-durante la misma se marca cada punto como tratado, se añaden notas y se asignan responsables. Editar la copia no
-modifica la rúbrica original. También se puede crear una rúbrica desde el asistente de IA (ver abajo).
+**Registrar un acta.** En la barra lateral, entrar en **📝 Actas** y crear una: nombre, **fecha** de la reunión,
+**personas involucradas** (una por línea), descripción/objetivo, opcionalmente un proyecto asociado, y los puntos
+(clasificados en punto a tratar / acuerdo / próximo paso, cada uno con notas y responsable). Las actas son
+independientes y no dependen de ninguna reunión. También se puede crear un acta desde el asistente de IA (ver abajo).
 
 **Usar el asistente de IA.** Pulsar el botón flotante **🤖** (abajo a la derecha). En lenguaje natural se puede:
 crear tareas/reuniones/eventos (*"reunión con el equipo el lunes a las 10, remota"*), consultar lo anotado
-(*"¿qué tengo esta semana?"*), crear proyectos (*"crea un proyecto llamado Foundry"*) o crear una rúbrica paso a
-paso (*"crea una rúbrica"*). Requiere Ollama (ver [Configurar el asistente de IA](#-configurar-el-asistente-de-ia-ollama)).
+(*"¿qué tengo esta semana?"*), crear proyectos (*"crea un proyecto llamado Foundry"*) o crear un acta paso a
+paso (*"crea un acta"*). Requiere Ollama (ver [Configurar el asistente de IA](#-configurar-el-asistente-de-ia-ollama)).
 
 **Recibir recordatorios.** Con la aplicación abierta, se muestra un aviso emergente con sonido a los 30, 15 y 5
 minutos antes de cada reunión.
@@ -247,14 +255,14 @@ Base: `http://localhost:4000/api`
 | Método | Ruta | Descripción |
 |---|---|---|
 | `GET` | `/tasks` | Lista tareas (filtros opcionales: `category`, `state`, `projectId`) |
-| `POST` | `/tasks` | Crea una tarea/reunión/evento (rúbrica anidada incluida) |
+| `POST` | `/tasks` | Crea una tarea/reunión/evento (puntos de la reunión anidados incluidos) |
 | `PUT` | `/tasks/:id` | Reemplaza una tarea completa |
 | `PATCH` | `/tasks/:id` | Actualización parcial (estado, fechas…) |
 | `DELETE` | `/tasks/:id` | Elimina una tarea |
 | `GET/POST/PATCH/DELETE` | `/projects` | CRUD de proyectos/cursos |
-| `GET/POST/PUT/DELETE` | `/rubrics` | CRUD de rúbricas (filtro opcional: `projectId`) |
-| `POST` | `/ai/chat` | Asistente de IA: propone un borrador de ítem, responde consultas/resúmenes, crea proyectos o inicia el asistente de rúbricas |
-| `POST` | `/ai/rubric-flow` | Asistente secuencial de rúbricas: avanza un paso del flujo (nombre → proyecto → … → confirmar) |
+| `GET/POST/PUT/DELETE` | `/rubrics` | CRUD de actas (filtro opcional: `projectId`). *(La ruta mantiene el nombre `rubrics` por compatibilidad; de cara al usuario son "actas".)* |
+| `POST` | `/ai/chat` | Asistente de IA: propone un borrador de ítem, responde consultas/resúmenes, crea proyectos o inicia el asistente de actas |
+| `POST` | `/ai/rubric-flow` | Asistente secuencial de actas: avanza un paso del flujo (nombre → proyecto → … → confirmar) |
 | `POST` | `/ai/suggest-rubric` | Sugiere puntos del orden del día de una reunión |
 | `POST` | `/ai/minutes` | Genera el acta de una reunión a partir de sus puntos y notas |
 
@@ -272,7 +280,7 @@ Hoy los recordatorios de reunión son avisos dentro de la app (popup + sonido) y
 abierta. El próximo paso es que la **IA envíe recordatorios por canales externos** al usuario que lo active,
 para que lleguen aunque la app esté cerrada:
 - **Correo electrónico**: aviso a los 30/15/5 min antes de cada reunión. La IA **redacta** el mensaje con el
-  orden del día (la rúbrica), objetivo y datos de la reunión, listo para leer.
+  orden del día (los puntos de la reunión), objetivo y datos de la reunión, listo para leer.
 - **WhatsApp**: notificación al móvil con los datos de la reunión (hora, modalidad, enlace si es remota) y un
   resumen breve generado por IA.
 - **Opt-in del usuario**: cada canal se activa/desactiva desde la configuración, eligiendo con cuánta antelación
@@ -283,15 +291,15 @@ para que lleguen aunque la app esté cerrada:
 
 ### 🤖 Más capacidades del asistente de IA
 El chatbot ya **crea tareas, reuniones y eventos**, **consulta y resume** tus ítems, **crea proyectos/cursos** y
-**crea rúbricas paso a paso** por lenguaje natural; dentro de la rúbrica la IA **sugiere el orden del día** y
-**redacta el acta** (ver [Asistente de IA](#-asistente-de-ia-chatbot)). Próximas ideas:
+**crea actas paso a paso** por lenguaje natural; dentro de los puntos de la reunión la IA **sugiere el orden del
+día** y **redacta el acta** (ver [Asistente de IA](#-asistente-de-ia-chatbot)). Próximas ideas:
 - **Editar y completar ítems desde el chat**: *"marca como hecha la tarea del informe"* o *"pospón la reunión
   al jueves"*.
 
 ### 💡 Otras ideas en estudio
-- Reordenar puntos de la rúbrica con arrastrar y soltar.
+- Reordenar los puntos del acta con arrastrar y soltar.
 - Vista semanal en el calendario y franjas de 15 minutos.
-- Exportar/compartir reuniones y rúbricas (PDF).
+- Exportar/compartir reuniones y actas (PDF).
 - Soporte multiusuario y sincronización en la nube.
 
 ---
