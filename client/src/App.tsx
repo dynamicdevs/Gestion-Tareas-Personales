@@ -2,13 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
 import type { Task, TaskInput } from "./types";
 import { daysUntil } from "./utils";
-import Sidebar from "./components/Sidebar";
+import Sidebar, { type Section } from "./components/Sidebar";
 import TaskCard from "./components/TaskCard";
 import TaskModal from "./components/TaskModal";
 import ProjectModal from "./components/ProjectModal";
 import Board from "./components/Board";
 import Calendar from "./components/Calendar";
 import RubricManager from "./components/RubricManager";
+import ProjectsManager from "./components/ProjectsManager";
+import Analytics from "./components/Analytics";
 import Faq from "./components/Faq";
 import ChatPanel from "./components/ChatPanel";
 import ToastStack, { type Toast } from "./components/ToastStack";
@@ -29,7 +31,7 @@ export default function App() {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [rubricTemplates, setRubricTemplates] = useState<RubricTemplate[]>([]);
-  const [section, setSection] = useState<"tasks" | "rubrics" | "faq">("tasks");
+  const [section, setSection] = useState<Section>("tasks");
   const [activeCategory, setActiveCategory] = useState<Category>("Trabajo");
   const [activeProject, setActiveProject] = useState<string>(""); // "" = todos los proyectos
   const [hideDone, setHideDone] = useState(false);
@@ -288,6 +290,8 @@ export default function App() {
           activeCategory={activeCategory}
           section={section}
           onCategory={selectCategory}
+          onProjects={() => setSection("projects")}
+          onAnalytics={() => setSection("analytics")}
           onRubrics={() => setSection("rubrics")}
           onFaq={() => setSection("faq")}
         />
@@ -299,7 +303,11 @@ export default function App() {
             </div>
           )}
 
-          {section === "rubrics" ? (
+          {section === "projects" ? (
+            <ProjectsManager projects={projects} tasks={tasks} onChanged={reload} />
+          ) : section === "analytics" ? (
+            <Analytics projects={projects} tasks={tasks} />
+          ) : section === "rubrics" ? (
             <RubricManager projects={projects} onChanged={reload} />
           ) : section === "faq" ? (
             <Faq />

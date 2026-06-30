@@ -1,15 +1,28 @@
 import { CATEGORIES, CATEGORY_META, type Task, type Category } from "../types";
 
+export type Section = "tasks" | "projects" | "analytics" | "rubrics" | "faq";
+
 interface Props {
   tasks: Task[];
   activeCategory: string;
-  section: "tasks" | "rubrics" | "faq";
+  section: Section;
   onCategory: (c: Category) => void;
+  onProjects: () => void;
+  onAnalytics: () => void;
   onRubrics: () => void;
   onFaq: () => void;
 }
 
-export default function Sidebar({ tasks, activeCategory, section, onCategory, onRubrics, onFaq }: Props) {
+export default function Sidebar({
+  tasks,
+  activeCategory,
+  section,
+  onCategory,
+  onProjects,
+  onAnalytics,
+  onRubrics,
+  onFaq,
+}: Props) {
   const itemCls = (active: boolean) =>
     `flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer text-sm transition-all ${
       active
@@ -33,6 +46,16 @@ export default function Sidebar({ tasks, activeCategory, section, onCategory, on
             </div>
           );
         })}
+      </div>
+
+      <h3 className="text-[11px] uppercase tracking-wider text-fg-dim mb-2 mt-6 px-2">Paneles</h3>
+      <div className="space-y-1">
+        <div className={itemCls(section === "projects")} onClick={onProjects}>
+          <span>📂 Proyectos</span>
+        </div>
+        <div className={itemCls(section === "analytics")} onClick={onAnalytics}>
+          <span>📈 Estadísticas</span>
+        </div>
       </div>
 
       <h3 className="text-[11px] uppercase tracking-wider text-fg-dim mb-2 mt-6 px-2">Herramientas</h3>

@@ -161,6 +161,20 @@ tasksRouter.patch("/:id", async (req, res) => {
   }
   if (req.body.due !== undefined) allowed.due = req.body.due ? new Date(req.body.due) : null;
   if (req.body.endDate !== undefined) allowed.endDate = req.body.endDate ? new Date(req.body.endDate) : null;
+  // Permite asignar/quitar el proyecto. Validamos que exista (y, si la tarea no cambia
+  // de categoría, que el proyecto sea de la misma categoría) para no romper la coherencia.
+  if (req.body.projectId !== undefined) {
+    const pid = req.body.projectId || null;
+    if (pid) {
+      const project = await prisma.project.findUnique({ where: { id: pid } });
+      if (!project) return res.status(400).json({ error: "Proyecto no encontrado" });
+      const targetCategory = allowed.category ?? exists.category;
+      if (project.category !== targetCategory) {
+        return res.status(400).json({ error: "El proyecto no pertenece al apartado de la tarea" });
+      }
+    }
+    allowed.projectId = pid;
+  }
 
   const task = await prisma.task.update({ where: { id: req.params.id }, data: allowed, include });
   res.json(serialize(task));
